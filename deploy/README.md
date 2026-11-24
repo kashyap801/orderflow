@@ -1,6 +1,8 @@
 # Deployment guide
 
-**Status:** proposed / Phase 1 documentation. No Dockerfiles or Compose files exist yet (Phase 7).
+**Status:** Phase 2 local infrastructure files now exist. Only the Order Service foundation has a
+Dockerfile; gateway and domain services remain future work. Docker was not available in the build
+environment, so Compose files were syntax-checked but not started.
 
 ## 1. Hosting model
 
@@ -37,12 +39,21 @@ flowchart LR
   N --> K
 ```
 
-## 2. Local Docker Compose (Phase 7)
+## 2. Local Docker Compose (Phase 2 scope)
 
-Planned files:
+Files:
 
-- `docker-compose.infra.yml`: MongoDB, Redis, Kafka only.
-- `docker-compose.yml`: full stack (web, gateway, four domain services + infra).
+- `docker-compose.infra.yml`: MongoDB replica set `rs0`, Redis, Kafka only.
+- `docker-compose.yml`: the same infrastructure plus the Order Service foundation container.
+
+Commands from the repository root:
+
+```powershell
+npm run dev:infra     # infrastructure only
+npm run dev:order     # build/run the local Node process against host-side infra
+npm run dev:stack     # infrastructure + backend container
+npm run dev:down      # stop and remove containers/networks
+```
 
 MongoDB must run as a **replica set** because Mongoose multi-document transactions and the outbox
 relay lease require it:
@@ -60,8 +71,9 @@ mongo:
 A one-time init container runs `rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]})`.
 `depends_on` health conditions gate the backend services on Mongo, Redis and Kafka readiness.
 
-Host ports: web 5173, gateway 3000, MongoDB 27017, Redis 6379, Kafka 9092. Domain service ports
-3001–3004 stay internal to the Compose network.
+Host ports currently published: MongoDB 27017, Redis 6379, Kafka 9092 and the Order Service
+foundation 3001. Web 5173 and gateway 3000 are future phases; the other domain service ports remain
+internal until their services are implemented.
 
 ## 3. GitHub
 

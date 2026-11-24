@@ -18,17 +18,24 @@ Update this file as work progresses. Each phase ends with a verification step.
 - [x] Replaced the original relational database plan with MongoDB/Mongoose model (collections, indexes, validation)
 - [x] Updated deployment architecture: GitHub, Vercel, Render, Atlas, Upstash, Confluent
 - [x] Updated `.env.example`, ADRs and local setup instructions
-- [x] Architecture revision approved; Phase 2 still held pending explicit go-ahead
-- [ ] **Await Phase 2 go-ahead**
+- [x] Architecture revision approved
+- [x] Phase 2 go-ahead received
 
-## Phase 2 — Backend foundation
+## Phase 2 — Backend foundation ✅ IMPLEMENTED (scope limited: no full microservices)
 
-- [ ] NestJS bootstrap for gateway + 4 services; health endpoints
-- [ ] `@orderflow/common`: env validation, logger, exception filter, correlation ID
-- [ ] Mongoose schemas, TypeScript interfaces and indexes for four MongoDB databases
-- [ ] MongoDB (replica set)/Redis/Kafka clients with retry/backoff and graceful shutdown
-- [ ] Auth in Order Service: register/login, bcryptjs, JWT, RBAC guard
-- [ ] Verify: `npm run typecheck`, service boot + `/health/ready` against local infra
+- [x] NestJS bootstrap for one runnable service: Order Service foundation
+- [x] Global validation, CORS, standard success/error envelopes, exception filter and correlation IDs
+- [x] `@orderflow/common`: env validation, structured logger, exception filter, correlation ID,
+      health checks, Swagger setup and reusable Nest modules
+- [x] Mongoose connection module with config-driven URI, retry, ping readiness and graceful shutdown
+      (domain schemas/indexes deliberately deferred to Phase 3)
+- [x] Redis and Kafka clients prepared as opt-in (`*_ENABLED=false` by default); no topics/consumers yet
+- [x] Jest unit tests for env validation; health integration tests for liveness, readiness and 503
+- [x] Local Docker Compose for MongoDB replica set `rs0`, Redis, Kafka and the backend container
+- [x] README, API docs and deployment guide updated for the implemented foundation
+- [x] Verify: build, typecheck, lint, format, 6 Jest tests and local HTTP smoke test
+- [ ] Verify: `/health/ready` with real MongoDB after Docker is installed on the host
+- [ ] Auth in Order Service: register/login, bcryptjs, JWT, RBAC guard (Phase 3)
 
 ## Phase 3 — Core microservices
 
@@ -79,3 +86,8 @@ Update this file as work progresses. Each phase ends with a verification step.
 | 2026-11-24 | 1 | `npm install` / `npm run format:check` | NOT RUN — Node.js is not installed in this environment; run on the developer machine before Phase 2 |
 | 2026-11-24 | 1 (revision) | Full-workspace scan for old database/ORM names and SQL-only wording | PASS — 0 references |
 | 2026-11-24 | 1 (revision) | 12 JSON configs re-parsed after edits | PASS — 0 failures |
+| 2026-11-25 | 2 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS |
+| 2026-11-25 | 2 | `npm run test:order` | PASS — 2 suites, 6 tests |
+| 2026-11-25 | 2 | Local HTTP smoke: `/health`, `/docs`, `/docs-json` | PASS — 200; `/health/ready` returned expected 503 without MongoDB |
+| 2026-11-25 | 2 | Docker Compose YAML syntax | PASS — parsed with `js-yaml` |
+| 2026-11-25 | 2 | `docker compose up` with real services | NOT RUN — Docker is not installed in this environment |

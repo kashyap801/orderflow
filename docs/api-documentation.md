@@ -1,12 +1,14 @@
 # API documentation
 
-**Status:** proposed contract; controllers and Swagger annotations are Phase 3 work.
+**Status:** health endpoints and Swagger are implemented in Phase 2. All business endpoints below
+remain proposed contracts for Phase 3+.
 
 ## 1. Conventions
 
 - Public base URL: `http://localhost:3000/api/v1` (gateway only). Internal service ports are not
   exposed to the host.
 - JSON request/response bodies. `Content-Type: application/json`.
+- Success envelope: `{ "data": <payload>, "correlationId": "<uuid>" }`.
 - Auth: `Authorization: Bearer <JWT>`. Roles: `CUSTOMER`, `ADMIN`.
 - Idempotent writes: `Idempotency-Key: <uuid>` header on `POST /orders`.
 - Correlation: caller may send `X-Correlation-Id: <uuid>`; gateway generates one if absent and
@@ -61,8 +63,12 @@ All paths above are relative to `/api/v1`.
 }
 ```
 
-Detailed response schemas, examples and OpenAPI JSON will be generated from NestJS decorators in
-Phase 3 and surfaced at `/api/v1/docs` (gateway) plus per-service `/docs` endpoints.
+Swagger UI is available at `http://localhost:3001/api/v1/docs` and the generated OpenAPI JSON at
+`http://localhost:3001/api/v1/docs-json`. Business endpoints will be added to this document as their
+controllers are implemented in Phase 3.
+
+`GET /api/v1/health/ready` returns `503` with the standard error envelope when a required dependency
+is unavailable. Redis and Kafka are checked only when `REDIS_ENABLED` / `KAFKA_ENABLED` are `true`.
 
 ## 4. Status codes
 

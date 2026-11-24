@@ -2,9 +2,10 @@
 
 **Distributed e-commerce order management system — portfolio / interview project.**
 
-> **Build status: Phase 1 complete (architecture + foundation scaffolding, revised for MongoDB/Mongoose and managed deployment).**
-> No application runtime code exists yet. Implementation starts at Phase 2 only after your go-ahead.
-> See [docs/implementation-checklist.md](docs/implementation-checklist.md) for progress.
+> **Build status: Phase 2 backend foundation implemented and smoke-tested.**
+> One minimal NestJS service (Order Service foundation) plus shared infrastructure are implemented.
+> Domain microservices, auth, Kafka workflows and the frontend remain on hold. See
+> [docs/implementation-checklist.md](docs/implementation-checklist.md) for progress.
 
 ---
 
@@ -136,25 +137,50 @@ Full contract, retries, DLQ and failure flows:
 
 ## 8. Local setup
 
-Available now (Phase 1):
+Install dependencies and verify formatting:
 
 ```powershell
 npm install
 npm run format:check
 ```
 
-Planned from Phase 2/7:
+Start infrastructure and the runnable backend foundation:
 
 ```powershell
 copy .env.example .env
-docker compose -f deploy/docker-compose.infra.yml up -d   # MongoDB rs0 + Redis + Kafka
-npm run dev          # all services via docker compose
-docker compose -f deploy/docker-compose.yml up --build
+npm run dev:infra                         # MongoDB rs0 + Redis + Kafka
+npm run dev:order                         # Order Service foundation on http://localhost:3001
 ```
 
+Or start everything, including the backend container, with Docker Compose:
+
+```powershell
+npm run dev:stack
+npm run dev:down
+```
+
+Useful endpoints once running:
+
+| URL | Purpose |
+| --- | --- |
+| `http://localhost:3001/api/v1/health` | Liveness |
+| `http://localhost:3001/api/v1/health/ready` | MongoDB/Redis/Kafka readiness |
+| `http://localhost:3001/api/v1/docs` | Swagger UI |
+
 Local MongoDB runs as a **single-node replica set (`rs0`)** so Mongoose multi-document transactions
-work. Hosted environments use MongoDB Atlas M10+ and the managed services listed in
-[deploy/README.md](deploy/README.md).
+work. Host-side Node processes use `directConnection=true`; Compose overrides the URI with
+`replicaSet=rs0` and the internal `mongo` hostname. Hosted environments use MongoDB Atlas M10+ and
+the managed services listed in [deploy/README.md](deploy/README.md).
+
+Verification commands:
+
+```powershell
+npm run build
+npm run typecheck
+npm run lint
+npm run format:check
+npm run test:order
+```
 
 ## 9. Documentation
 

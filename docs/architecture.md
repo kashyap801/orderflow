@@ -1,6 +1,7 @@
 # Architecture
 
-**Status:** proposed and accepted into Phase 1; implementation pending approval.
+**Status:** accepted architecture. Phase 2 implements the shared foundation and one runnable Order
+Service bootstrap; domain behaviour remains future work.
 
 ## 1. Context and goals
 
