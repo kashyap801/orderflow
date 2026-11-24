@@ -1,4 +1,9 @@
-import { Injectable, type CallHandler, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
+import {
+  Injectable,
+  type CallHandler,
+  type ExecutionContext,
+  type NestInterceptor,
+} from '@nestjs/common';
 import { type Observable, map } from 'rxjs';
 import type { ApiSuccessResponse } from './api-response';
 import { CorrelationContext } from './correlation-context';
@@ -25,7 +30,5 @@ export class ApiResponseInterceptor implements NestInterceptor {
 }
 
 function isWrapped(value: unknown): value is ApiSuccessResponse<unknown> {
-  return (
-    typeof value === 'object' && value !== null && 'data' in value && 'correlationId' in value
-  );
+  return typeof value === 'object' && value !== null && 'data' in value && 'correlationId' in value;
 }

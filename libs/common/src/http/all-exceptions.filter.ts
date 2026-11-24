@@ -77,7 +77,11 @@ function resolveCode(exception: unknown, status: number): string {
   return codes[status] ?? 'INTERNAL_SERVER_ERROR';
 }
 
-function resolveMessage(exception: unknown, status: number, isProduction: boolean): string | string[] {
+function resolveMessage(
+  exception: unknown,
+  status: number,
+  isProduction: boolean,
+): string | string[] {
   if (exception instanceof HttpException) {
     const payload = exception.getResponse();
     if (typeof payload === 'string') return payload;

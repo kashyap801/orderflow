@@ -30,7 +30,9 @@ export class CorrelationMiddleware implements NestMiddleware {
     CorrelationContext.run(correlationId, () => {
       response.once('finish', () => {
         const durationMs = Date.now() - startedAt;
-        this.logger.log(`${request.method} ${request.originalUrl} ${response.statusCode} ${durationMs}ms`);
+        this.logger.log(
+          `${request.method} ${request.originalUrl} ${response.statusCode} ${durationMs}ms`,
+        );
       });
       next();
     });

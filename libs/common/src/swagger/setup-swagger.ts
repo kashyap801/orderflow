@@ -16,5 +16,9 @@ export function setupSwagger(app: INestApplication, options: SwaggerOptions): vo
     .addTag('Health')
     .build();
 
-  SwaggerModule.setup(options.path ?? 'api/v1/docs', app, SwaggerModule.createDocument(app, config));
+  SwaggerModule.setup(
+    options.path ?? 'api/v1/docs',
+    app,
+    SwaggerModule.createDocument(app, config),
+  );
 }

@@ -43,9 +43,11 @@ export class DatabaseService implements OnApplicationBootstrap, OnApplicationShu
   }
 
   getState(): string {
-    return ['disconnected', 'connected', 'connecting', 'disconnecting'][
-      mongoose.connection.readyState
-    ] ?? 'unknown';
+    return (
+      ['disconnected', 'connected', 'connecting', 'disconnecting'][
+        mongoose.connection.readyState
+      ] ?? 'unknown'
+    );
   }
 
   async isReady(): Promise<boolean> {
@@ -74,7 +76,10 @@ export class DatabaseService implements OnApplicationBootstrap, OnApplicationShu
 
     const uri = this.config.getOrThrow<string>(this.uriEnvKey);
     const options: ConnectOptions = {
-      serverSelectionTimeoutMS: this.config.get<number>('MONGODB_SERVER_SELECTION_TIMEOUT_MS', 5000),
+      serverSelectionTimeoutMS: this.config.get<number>(
+        'MONGODB_SERVER_SELECTION_TIMEOUT_MS',
+        5000,
+      ),
       autoIndex: this.config.get<string>('MONGODB_AUTO_INDEX', 'false') === 'true',
       retryWrites: true,
       retryReads: true,

@@ -1,4 +1,10 @@
-import { Global, Module, type DynamicModule, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
+import {
+  Global,
+  Module,
+  type DynamicModule,
+  type MiddlewareConsumer,
+  type NestModule,
+} from '@nestjs/common';
 import { AppConfigModule } from './config/app-config.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health/health.controller';
