@@ -2,7 +2,7 @@
   "name": "orderflow",
   "version": "0.1.0",
   "private": true,
-  "description": "OrderFlow - distributed e-commerce order management system (Phase 1 foundation)",
+  "description": "OrderFlow - distributed e-commerce order management system (Phase 2 backend foundation)",
   "engines": {
     "node": ">=20 <23",
     "npm": ">=10"
@@ -12,14 +12,20 @@
     "libs/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build:common": "npm run build --workspace=@orderflow/common",
+    "build:order": "npm run build --workspace=@orderflow/order-service",
+    "build": "npm run build:common && npm run build:order",
+    "dev:order": "npm run dev --workspace=@orderflow/order-service",
+    "start:order": "npm run start --workspace=@orderflow/order-service",
+    "test:order": "npm run test --workspace=@orderflow/order-service",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "dev:infra": "docker compose -f deploy/docker-compose.infra.yml up -d",
-    "dev:down": "docker compose -f deploy/docker-compose.yml down"
+    "dev:infra": "docker compose --env-file .env -f deploy/docker-compose.infra.yml up -d",
+    "dev:stack": "docker compose --env-file .env -f deploy/docker-compose.yml up --build",
+    "dev:down": "docker compose --env-file .env -f deploy/docker-compose.yml down"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.18.0",
