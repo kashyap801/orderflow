@@ -1,6 +1,11 @@
 node_modules/
 dist/
 coverage/
+*.tsbuildinfo
+apps/*/src/**/*.js
+apps/*/src/**/*.js.map
+libs/*/src/**/*.js
+libs/*/src/**/*.js.map
 .env
 .env.*
 !.env.example

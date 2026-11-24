@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
+    "noEmitOnError": true,
     "baseUrl": "../..",
     "paths": {
       "@orderflow/common": ["libs/common/dist/index.d.ts"],
