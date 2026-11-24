@@ -1,0 +1,6 @@
+{
+  "name": "@orderflow/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared TypeScript event envelopes, event payload types, DTO contracts and topic constants"
+}

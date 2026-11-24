@@ -1,0 +1,6 @@
+{
+  "name": "@orderflow/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "React + Vite + Tailwind storefront; communicates only with the API gateway"
+}

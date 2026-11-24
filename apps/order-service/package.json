@@ -1,0 +1,6 @@
+{
+  "name": "@orderflow/order-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Order domain: identity, orders, saga orchestration, order state machine, outbox"
+}

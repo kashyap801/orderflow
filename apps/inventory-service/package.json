@@ -1,0 +1,6 @@
+{
+  "name": "@orderflow/inventory-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Inventory domain: products, stock, atomic reservations, expiry worker, catalogue cache"
+}

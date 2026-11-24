@@ -1,0 +1,6 @@
+{
+  "name": "@orderflow/api-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Edge gateway: routing, JWT verification, RBAC, validation, rate limiting, correlation IDs"
+}

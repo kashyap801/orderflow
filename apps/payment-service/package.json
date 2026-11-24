@@ -1,0 +1,6 @@
+{
+  "name": "@orderflow/payment-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Payment domain: simulated authorization/capture/refunds, idempotency, transaction history"
+}

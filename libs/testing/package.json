@@ -1,0 +1,6 @@
+{
+  "name": "@orderflow/testing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Test factories, fixtures and infrastructure helpers shared by service test suites"
+}
