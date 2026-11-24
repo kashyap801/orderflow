@@ -1,6 +1,5 @@
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
 import { HealthService } from './health.service';
 
 @ApiTags('Health')
@@ -19,9 +18,11 @@ export class HealthController {
   @ApiOperation({ summary: 'Dependency readiness' })
   @ApiResponse({ status: 200, description: 'All enabled dependencies are ready' })
   @ApiResponse({ status: 503, description: 'One or more required dependencies are unavailable' })
-  async readiness(@Res({ passthrough: true }) response: Response): Promise<unknown> {
+  async readiness(): Promise<unknown> {
     const result = await this.health.getReadiness();
-    if (result.status === 'error') response.status(HttpStatus.SERVICE_UNAVAILABLE);
+    if (result.status === 'error') {
+      throw new ServiceUnavailableException('Dependency readiness check failed');
+    }
     return result;
   }
 }
