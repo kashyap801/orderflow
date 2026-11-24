@@ -1,21 +1,25 @@
 # Creates the OrderFlow Git repository with multiple logical commits.
-# Run from anywhere after installing Git for Windows:
-#   powershell -ExecutionPolicy Bypass -File "C:\Users\ashis\OneDrive\Documents\Default Project\scripts\init-git.ps1"
+# Run ONCE on a fresh copy, after installing Git for Windows:
+#   powershell -ExecutionPolicy Bypass -File "C:\Users\ashis\OneDrive\Desktop\Project Ecommerce\scripts\init-git.ps1"
 
 $ErrorActionPreference = 'Stop'
-$projectRoot = 'C:\Users\ashis\OneDrive\Documents\Default Project'
+$projectRoot = 'C:\Users\ashis\OneDrive\Desktop\Project Ecommerce'
 Set-Location -LiteralPath $projectRoot
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
   throw 'git was not found on PATH. Install Git for Windows, then re-run this script.'
 }
 
+if (Test-Path '.git') {
+  throw 'A Git repository already exists here. This script is for initial setup only.'
+}
+
 git init
 git branch -M main
 
-# Local identity only. Replace with your GitHub identity before pushing.
-git config user.name 'OrderFlow Developer'
-git config user.email 'developer@orderflow.local'
+# Local identity matching the GitHub account used for this project.
+git config user.name 'kashyap801'
+git config user.email 'ashish801kashyap@gmail.com'
 
 function Add-And-Commit {
   param(
@@ -77,5 +81,5 @@ git status --short
 git log --oneline --decorate
 
 # Optional once you have created the GitHub repository:
-# git remote add origin https://github.com/<your-username>/orderflow.git
+# git remote add origin https://github.com/kashyap801/orderflow.git
 # git push -u origin main

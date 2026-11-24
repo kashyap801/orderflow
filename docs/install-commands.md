@@ -1,7 +1,10 @@
 # Package install commands
 
 **Prerequisites:** Node.js 20 LTS (or 22) with npm 10+, Git, Docker Desktop.
-Run all commands from the project root: `C:\Users\ashis\OneDrive\Documents\Default Project`.
+Run all commands from the project root: `C:\Users\ashis\OneDrive\Desktop\Project Ecommerce`.
+
+Node.js/npm are not installed yet in this environment. Install Node.js 20 LTS first, then run the
+commands below. Nothing has been installed so far.
 
 Versions below are compatible major ranges chosen to keep the stack stable. No relational
 database driver, ORM/code generator, native bcrypt, CDC tool or test-container library is used.
@@ -95,3 +98,19 @@ docker compose -f deploy/docker-compose.infra.yml up -d
 ```
 
 Compose will run MongoDB as a replica set `rs0`, Redis 7 and Kafka KRaft.
+
+## 8. Git commands (identity and GitHub push)
+
+The repository already exists at the project root with five commits. Use your GitHub identity:
+
+```powershell
+cd "C:\Users\ashis\OneDrive\Desktop\Project Ecommerce"
+git config user.name "kashyap801"
+git config user.email "ashish801kashyap@gmail.com"
+git remote add origin https://github.com/kashyap801/orderflow.git
+git push -u origin main
+git log --oneline --decorate
+```
+
+If `origin` was already added, use `git remote set-url origin https://github.com/kashyap801/orderflow.git`
+instead of `git remote add origin ...`.
