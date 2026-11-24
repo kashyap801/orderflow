@@ -1,14 +1,11 @@
 import { Global, Module, type DynamicModule, type MiddlewareConsumer, type NestModule } from '@nestjs/common';
 import { AppConfigModule } from './config/app-config.module';
 import { DatabaseModule } from './database/database.module';
-import { DatabaseService } from './database/database.service';
 import { HealthController } from './health/health.controller';
 import { HealthService } from './health/health.service';
 import { CorrelationMiddleware } from './http/correlation.middleware';
 import { KafkaModule } from './infra/kafka.module';
-import { KafkaService } from './infra/kafka.service';
 import { RedisModule } from './infra/redis.module';
-import { RedisService } from './infra/redis.service';
 import { AppLogger } from './logging/app-logger';
 
 export interface FoundationModuleOptions {
@@ -28,15 +25,19 @@ export class FoundationModule implements NestModule {
         KafkaModule,
       ],
       controllers: [HealthController],
-      providers: [AppLogger, CorrelationMiddleware, HealthService],
+      providers: [
+        { provide: AppLogger, useFactory: () => new AppLogger('OrderFlow') },
+        CorrelationMiddleware,
+        HealthService,
+      ],
       exports: [
         AppConfigModule,
+        DatabaseModule,
+        RedisModule,
+        KafkaModule,
         AppLogger,
         CorrelationMiddleware,
-        DatabaseService,
         HealthService,
-        KafkaService,
-        RedisService,
       ],
     };
   }

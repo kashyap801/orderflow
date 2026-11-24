@@ -1,10 +1,8 @@
-import { Injectable, Logger, type LoggerService } from '@nestjs/common';
+import { Injectable, type LoggerService } from '@nestjs/common';
 import { CorrelationContext } from '../http/correlation-context';
 
 @Injectable()
 export class AppLogger implements LoggerService {
-  private readonly logger = new Logger();
-
   constructor(private readonly context = 'OrderFlow') {}
 
   withContext(context: string): AppLogger {
@@ -16,7 +14,7 @@ export class AppLogger implements LoggerService {
   }
 
   log(message: unknown, ...optionalParams: unknown[]): void {
-    this.logger.log(this.format(message, optionalParams), this.context);
+    this.write('info', message, optionalParams);
   }
 
   error(message: unknown, trace?: unknown, ...optionalParams: unknown[]): void {
@@ -26,32 +24,40 @@ export class AppLogger implements LoggerService {
         : trace === undefined
           ? {}
           : { trace };
-    this.logger.error(this.format(message, [details, ...optionalParams]), this.context);
+    this.write('error', message, [details, ...optionalParams]);
   }
 
   warn(message: unknown, ...optionalParams: unknown[]): void {
-    this.logger.warn(this.format(message, optionalParams), this.context);
+    this.write('warn', message, optionalParams);
   }
 
   debug(message: unknown, ...optionalParams: unknown[]): void {
-    this.logger.debug(this.format(message, optionalParams), this.context);
+    this.write('debug', message, optionalParams);
   }
 
   verbose(message: unknown, ...optionalParams: unknown[]): void {
-    this.logger.verbose(this.format(message, optionalParams), this.context);
+    this.write('debug', message, optionalParams);
   }
 
   fatal(message: unknown, ...optionalParams: unknown[]): void {
-    this.logger.fatal(this.format(message, optionalParams), this.context);
+    this.write('error', message, optionalParams);
   }
 
-  private format(message: unknown, optionalParams: unknown[]): string {
+  private write(level: string, message: unknown, optionalParams: unknown[]): void {
     const correlationId = CorrelationContext.getId();
     const meta = optionalParams.filter((param) => param !== undefined && param !== null);
-    const payload = {
+    const entry = {
+      level,
+      context: this.context,
+      timestamp: new Date().toISOString(),
       ...(correlationId === undefined ? {} : { correlationId }),
+      message: String(message),
       ...(meta.length > 0 ? { meta } : {}),
     };
-    return `${String(message)} ${JSON.stringify(payload)}`;
+    const line = JSON.stringify(entry);
+
+    if (level === 'error') console.error(line);
+    else if (level === 'warn') console.warn(line);
+    else console.log(line);
   }
 }
