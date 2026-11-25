@@ -33,7 +33,8 @@ These are deliberately small and are added incrementally on top of the working P
 2. **Basic roles** — `USER` for normal actions, `ADMIN` for product create/update/deactivate.
 3. **Kafka (implemented)** — Order publishes `ORDER_CREATED`; Notification consumes it and writes a
    notification.
-4. **Redis** — Inventory caches product reads with a short TTL and invalidates on writes.
+4. **Redis (implemented)** — Inventory caches product reads with a short TTL and invalidates on
+   writes.
 5. **React web app** — login, catalogue, cart, checkout, orders and a simple admin form.
 6. **GitHub + Vercel** — source stays on GitHub; the static frontend is deployed by Vercel.
 

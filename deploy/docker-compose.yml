@@ -98,8 +98,7 @@ services:
       MONGODB_URI_ORDER: mongodb://mongo:27017/orderflow_order?replicaSet=rs0
       MONGODB_AUTO_INDEX: 'true'
       INVENTORY_SERVICE_URL: http://inventory-service:3002
-      REDIS_ENABLED: 'true'
-      REDIS_URL: redis://redis:6379
+      REDIS_ENABLED: 'false'
       KAFKA_ENABLED: 'true'
       KAFKA_BROKERS: kafka:9092
       KAFKA_CLIENT_ID: orderflow-order-dev
@@ -108,8 +107,6 @@ services:
     depends_on:
       mongo-init:
         condition: service_completed_successfully
-      redis:
-        condition: service_healthy
       kafka:
         condition: service_healthy
     networks:
@@ -137,13 +134,17 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       MONGODB_URI_INVENTORY: mongodb://mongo:27017/orderflow_inventory?replicaSet=rs0
       MONGODB_AUTO_INDEX: 'true'
-      REDIS_ENABLED: 'false'
+      REDIS_ENABLED: 'true'
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL_SECONDS: '300'
       KAFKA_ENABLED: 'false'
     ports:
       - '${PORT_INVENTORY_SERVICE:-3002}:3002'
     depends_on:
       mongo-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     networks:
       - orderflow
     healthcheck:

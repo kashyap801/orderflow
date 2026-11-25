@@ -140,6 +140,12 @@ export class EnvironmentVariables {
   @MinLength(1)
   REDIS_URL = 'redis://localhost:6379';
 
+  @Transform(integer(300))
+  @IsInt()
+  @Min(1)
+  @Max(86400)
+  CACHE_TTL_SECONDS = 300;
+
   @IsOptional()
   @IsBooleanString()
   KAFKA_ENABLED = 'false';

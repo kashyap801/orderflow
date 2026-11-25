@@ -1,5 +1,7 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { isDuplicateKeyError } from '@orderflow/common';
+import { ConflictException, Inject, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { RedisService, isDuplicateKeyError } from '@orderflow/common';
+import type Redis from 'ioredis';
 import type { FilterQuery } from 'mongoose';
 import {
   BatchAvailabilityDto,
@@ -24,18 +26,26 @@ export interface ProductListResult {
   totalPages: number;
 }
 
+const LIST_VERSION_KEY = 'products:list:version';
+
 @Injectable()
 export class ProductsService {
-  constructor(@Inject(PRODUCT_MODEL) private readonly model: ProductModel) {}
+  constructor(
+    @Inject(PRODUCT_MODEL) private readonly model: ProductModel,
+    @Optional() private readonly redis?: RedisService,
+    @Optional() private readonly config?: ConfigService,
+  ) {}
 
   async create(input: CreateProductDto): Promise<Product> {
     try {
-      return await this.model.create({
+      const product = await this.model.create({
         ...input,
         sku: input.sku.toUpperCase(),
         reservedQuantity: 0,
         active: true,
       });
+      await this.invalidate(product._id);
+      return product;
     } catch (error) {
       if (isDuplicateKeyError(error)) {
         throw new ConflictException(`SKU already exists: ${input.sku.toUpperCase()}`);
@@ -45,12 +55,21 @@ export class ProductsService {
   }
 
   async findById(id: string): Promise<Product> {
+    const cached = await this.readCache<Product>(`product:${id}`);
+    if (cached !== undefined) return cached;
+
     const product = await this.model.findById(id).exec();
     if (product === null) throw new NotFoundException(`Product not found: ${id}`);
+    await this.writeCache(`product:${id}`, product);
     return product;
   }
 
   async list(query: ListProductsQueryDto): Promise<ProductListResult> {
+    const version = await this.listVersion();
+    const key = `products:list:v${version}:${JSON.stringify(query)}`;
+    const cached = await this.readCache<ProductListResult>(key);
+    if (cached !== undefined) return cached;
+
     const filter: FilterQuery<Product> = {};
     if (query.active !== undefined) filter.active = query.active;
     if (query.search !== undefined && query.search.length > 0) {
@@ -64,13 +83,15 @@ export class ProductsService {
       this.model.countDocuments(filter).exec(),
     ]);
 
-    return {
+    const result: ProductListResult = {
       items,
       total,
       page: query.page,
       limit: query.limit,
       totalPages: Math.ceil(total / query.limit),
     };
+    await this.writeCache(key, result);
+    return result;
   }
 
   async update(id: string, input: UpdateProductDto): Promise<Product> {
@@ -82,6 +103,7 @@ export class ProductsService {
         .findOneAndUpdate({ _id: id }, { $set: changes }, { new: true, runValidators: true })
         .exec();
       if (updated === null) throw new NotFoundException(`Product not found: ${id}`);
+      await this.invalidate(id);
       return updated;
     } catch (error) {
       if (isDuplicateKeyError(error)) {
@@ -96,6 +118,7 @@ export class ProductsService {
       .findOneAndUpdate({ _id: id }, { $set: { active: false } }, { new: true })
       .exec();
     if (updated === null) throw new NotFoundException(`Product not found: ${id}`);
+    await this.invalidate(id);
     return updated;
   }
 
@@ -124,7 +147,10 @@ export class ProductsService {
       )
       .exec();
 
-    if (updated !== null) return updated;
+    if (updated !== null) {
+      await this.invalidate(id);
+      return updated;
+    }
 
     const exists = await this.model.exists({ _id: id, active: true }).exec();
     if (exists === null) throw new NotFoundException(`Product not found or inactive: ${id}`);
@@ -140,7 +166,10 @@ export class ProductsService {
       )
       .exec();
 
-    if (updated !== null) return updated;
+    if (updated !== null) {
+      await this.invalidate(id);
+      return updated;
+    }
 
     const exists = await this.model.exists({ _id: id }).exec();
     if (exists === null) throw new NotFoundException(`Product not found: ${id}`);
@@ -152,7 +181,62 @@ export class ProductsService {
       .findOneAndUpdate({ _id: id }, { $inc: { availableQuantity: quantity } }, { new: true })
       .exec();
     if (updated === null) throw new NotFoundException(`Product not found: ${id}`);
+    await this.invalidate(id);
     return updated;
+  }
+
+  private get cache(): Redis | undefined {
+    return this.redis?.enabled === true ? this.redis.getClient() : undefined;
+  }
+
+  private get ttlSeconds(): number {
+    const raw = this.config?.get<number | string>('CACHE_TTL_SECONDS', 300);
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : 300;
+  }
+
+  private async readCache<T>(key: string): Promise<T | undefined> {
+    const cache = this.cache;
+    if (cache === undefined) return undefined;
+    try {
+      const raw = await cache.get(key);
+      return raw === null ? undefined : (JSON.parse(raw) as T);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async writeCache(key: string, value: unknown): Promise<void> {
+    const cache = this.cache;
+    if (cache === undefined) return;
+    try {
+      await cache.set(key, JSON.stringify(value), 'EX', this.ttlSeconds);
+    } catch {
+      // Cache failures never block product reads or writes.
+    }
+  }
+
+  private async listVersion(): Promise<number> {
+    const cache = this.cache;
+    if (cache === undefined) return 0;
+    try {
+      const raw = await cache.get(LIST_VERSION_KEY);
+      const version = Number(raw ?? 0);
+      return Number.isFinite(version) ? version : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private async invalidate(id: string): Promise<void> {
+    const cache = this.cache;
+    if (cache === undefined) return;
+    try {
+      await cache.del(`product:${id}`);
+      await cache.incr(LIST_VERSION_KEY);
+    } catch {
+      // Cache failures never block product writes.
+    }
   }
 }
 
