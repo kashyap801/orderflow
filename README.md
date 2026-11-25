@@ -2,22 +2,30 @@
 
 **Distributed e-commerce order management system — portfolio / interview project.**
 
-> **Build status: Phase 2 backend foundation implemented and smoke-tested.**
-> One minimal NestJS service (Order Service foundation) plus shared infrastructure are implemented.
-> Domain microservices, auth, Kafka workflows and the frontend remain on hold. See
-> [docs/implementation-checklist.md](docs/implementation-checklist.md) for progress.
+> **Build status: Phase 3 core backend implemented and smoke-tested.** Four domain services
+> (Order, Inventory, Payment, Notification) and the API Gateway are runnable with independent
+> MongoDB databases, Swagger, tests and Docker Compose. Kafka choreography, saga orchestration,
+> outbox relay, JWT/RBAC enforcement, rate limiting and the frontend remain Phase 4+.
 
 ---
 
 ## 1. Overview
 
 OrderFlow demonstrates production-oriented backend engineering: independently deployable NestJS
-services, MongoDB data ownership with Mongoose, Kafka event-driven choreography with saga
-orchestration, transactional outbox, idempotent consumers, Redis caching/rate limiting, automated
-tests, Docker Compose, CI, and a React storefront deployed on Vercel.
+services, MongoDB data ownership with Mongoose, REST APIs with DTO validation, Swagger/OpenAPI,
+automated tests, Docker Compose, CI and (in later phases) Kafka saga orchestration, Redis
+caching/rate limiting and a React storefront.
 
-It is deliberately **not** a CRUD demo: the order workflow is asynchronous, failure-aware and
-compensatable, and every cross-service state change is event-backed.
+Phase 3 delivers the **synchronous domain APIs**:
+
+- server-resolved order pricing (client-supplied prices/totals are rejected by DTO whitelisting),
+- atomic inventory reservations with `availableQuantity` / `reservedQuantity` and no overselling,
+- idempotent simulated payments with refunds and status history,
+- notification history with read state and simulated email delivery,
+- one gateway with centralized routing, correlation propagation and normalized upstream errors.
+
+The asynchronous order workflow is intentionally **not** implemented yet; see
+[docs/implementation-checklist.md](docs/implementation-checklist.md).
 
 ## 2. Requirement ambiguity resolved
 
@@ -26,60 +34,58 @@ The brief says "**four** independently deployable microservices" but then lists 
 
 **Resolution:** the four *domain* microservices are Order, Inventory, Payment and Notification.
 The API Gateway is treated as independently deployable **edge infrastructure**, not a domain
-microservice, and owns no business data. Total deployables: 6 (4 domain services + gateway + web).
+microservice, and owns no business data. Total backend deployables: 5 (4 domain services + gateway).
 
-Other explicit decisions: identity lives in the Order Service (no fifth Auth service), and the
-shopping cart is client-side (no Cart service). The database layer was revised to
-MongoDB/Mongoose during Phase 1 — rationale in
-[docs/technical-decisions.md](docs/technical-decisions.md).
+Other explicit decisions: identity is planned in the Order Service (no fifth Auth service), and the
+shopping cart is client-side (no Cart service). The database layer uses MongoDB/Mongoose; rationale
+in [docs/technical-decisions.md](docs/technical-decisions.md).
 
 ## 3. Architecture
 
 ```mermaid
 flowchart LR
-  UI["React Web (Vite, Vercel)"] -->|"REST /api/v1"| GW["API Gateway<br/>auth, RBAC, validation,<br/>rate limit, correlation ID"]
-  GW -->|"REST"| OS["Order Service<br/>saga orchestrator"]
-  GW -->|"REST"| IS["Inventory Service<br/>catalogue + stock"]
-  GW -->|"REST"| NS["Notification Service<br/>history"]
-  GW -->|"cache / limits"| R[("Redis")]
-  OS -->|"commands + events"| K[("Kafka<br/>topics + retry/DLQ")]
-  IS -->|"events + commands"| K
-  PS["Payment Service<br/>simulated payments"] -->|"events"| K
-  K -->|"domain events"| NS
-  K -->|"saga replies"| OS
-  K -->|"reservation commands"| IS
-  K -->|"payment commands"| PS
-  OS --> OD[("MongoDB: orderflow_order")]
-  IS --> ID[("MongoDB: orderflow_inventory")]
-  PS --> PD[("MongoDB: orderflow_payment")]
-  NS --> ND[("MongoDB: orderflow_notification")]
+  C["Client"] -->|"REST /api/v1"| GW["API Gateway<br/>routing, correlation, error normalization,<br/>auth context pass-through"]
+  GW --> OS["Order Service<br/>orders + status history"]
+  GW --> IS["Inventory Service<br/>catalogue + atomic stock"]
+  GW --> PS["Payment Service<br/>simulated capture + refunds"]
+  GW --> NS["Notification Service<br/>history + simulated email"]
+  OS -->|"sync price lookup"| IS
+  OS --> OD[("MongoDB<br/>orderflow_order")]
+  IS --> ID[("MongoDB<br/>orderflow_inventory")]
+  PS --> PD[("MongoDB<br/>orderflow_payment")]
+  NS --> ND[("MongoDB<br/>orderflow_notification")]
+  K[("Kafka / Redis<br/>Phase 4+")] -.-> OS
+  K -.-> IS
+  K -.-> PS
+  K -.-> NS
 ```
 
 Detailed boundaries, communication rules and deployment view: [docs/architecture.md](docs/architecture.md).
 
 ## 4. Service responsibilities
 
-| Deployable | Owns | Key responsibility |
-| --- | --- | --- |
-| API Gateway | No business DB; Redis for limits | Single entry point, JWT verification, RBAC, DTO validation, error mapping, correlation IDs, rate limiting, routing |
-| Order Service | `orderflow_order` (users, orders with embedded items, status history, outbox) | Order lifecycle, saga orchestration, compensation, idempotency |
-| Inventory Service | `orderflow_inventory` (products with embedded stock, reservations, outbox) | Atomic reservation/release, oversell prevention, expiry worker, catalogue cache |
-| Payment Service | `orderflow_payment` (payments with embedded transactions, outbox) | Simulated capture/refund, idempotency, transaction history |
-| Notification Service | `orderflow_notification` (notifications, dedupe) | Consume events, simulated email, history |
-| Web | Static assets | Storefront and admin UI; gateway-only API calls |
+| Deployable | Owns | Phase 3 responsibility | Deferred |
+| --- | --- | --- | --- |
+| API Gateway | No business DB | Route `/api/v1/{orders,inventory,payments,notifications}`, forward correlation/auth headers, normalize upstream failures as `502`, expose route table | JWT verification, RBAC, Redis rate limits |
+| Order Service | `orders` | Create/get/list/cancel, guarded status transitions, status history, server-side price lookup from Inventory | Saga orchestration, reservations during checkout, outbox |
+| Inventory Service | `products` | Product CRUD/deactivate, availability checks, atomic reserve/release/restock, oversell prevention | Reservation expiry worker, Redis cache |
+| Payment Service | `payments` | Simulated success/failure, idempotency key, full/partial refunds, payment history | Kafka payment commands/events |
+| Notification Service | `notifications` | Create/history/customer queries, read state, simulated email + resend | Kafka event consumers, dedupe |
+| Web | Static assets | Not implemented | Storefront/admin UI (Phase 6) |
 
 ## 5. Technology stack
 
 | Layer | Choice |
 | --- | --- |
 | Backend | Node.js 20+, TypeScript 5, NestJS 10, REST, **Mongoose**, class-validator, Swagger/OpenAPI |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query |
-| Data / infra | MongoDB 7 (Atlas M10+ hosted, single-node replica set locally), Redis 7, Apache Kafka 3.x, Docker + Docker Compose |
-| Hosting | GitHub, Vercel (web), Render (5 backend Docker services), MongoDB Atlas, Upstash Redis, Confluent Cloud |
+| Data / infra | MongoDB 7 (Atlas M10+ hosted, single-node replica set locally), Redis 7 and Kafka 3.x prepared but not used for business workflows yet |
+| Hosting | GitHub, Vercel (web, future), Render (backend Docker services), MongoDB Atlas, Upstash Redis, Confluent Cloud |
 | Quality | Jest, Supertest, ESLint, Prettier, GitHub Actions |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query (Phase 6) |
 
 No Nx/Turborepo, no relational database or code-generation ORM, no native `bcrypt` build, no
-CDC/Debezium, no extra logging framework — see ADR-013 and the deployment guide.
+CDC/Debezium, no extra logging framework — see ADRs in
+[docs/technical-decisions.md](docs/technical-decisions.md).
 
 ## 6. Repository layout
 
@@ -91,49 +97,46 @@ orderflow/
 │   ├── inventory-service/    # domain service (NestJS + Mongoose)
 │   ├── payment-service/      # domain service (NestJS + Mongoose)
 │   ├── notification-service/ # domain service (NestJS + Mongoose)
-│   └── web/                  # React + Vite (deployed on Vercel)
+│   └── web/                  # React + Vite (future phase)
 ├── libs/
-│   ├── contracts/            # shared event/DTO types (no runtime deps)
-│   ├── common/               # config, filters, logging, guards, outbox helpers
-│   └── testing/              # factories and test infrastructure helpers
+│   ├── contracts/            # shared event/DTO types (future topics)
+│   ├── common/               # config, bootstrap, filters, logging, health, infra clients
+│   └── testing/              # MongoDB memory-server test harness
+├── deploy/                   # shared Dockerfile + Compose files; local + hosted guide
 ├── docs/                     # architecture, database, events, lifecycle, decisions, API, checklist
-├── deploy/                   # Dockerfiles and Compose files; local + hosted deployment guide
 ├── .github/workflows/        # CI (Phase 7)
 ├── .env.example
 ├── package.json              # npm workspaces
 └── tsconfig.base.json
 ```
 
-## 7. Event flow (happy path, simplified)
+## 7. Current request flow
+
+Phase 3 uses synchronous REST. There is no Kafka consumer or saga orchestrator yet.
 
 ```mermaid
 sequenceDiagram
   participant C as Client
-  participant G as Gateway
+  participant G as API Gateway
   participant O as Order Service
   participant I as Inventory Service
   participant P as Payment Service
   participant N as Notification Service
 
-  C->>G: POST /api/v1/orders (idempotency key)
-  G->>O: create order
-  O->>O: PENDING + outbox(order.created, inventory.reservation.requested)
-  O-->>C: 201 PENDING
-  O->>I: inventory.reservation.requested (via outbox → Kafka)
-  I->>I: atomic conditional stock update
-  I->>O: inventory.reservation.confirmed
-  O->>P: payment.processing.requested
-  P->>P: idempotent simulated capture
-  P->>O: payment.completed
-  O->>O: CONFIRMED + outbox(order.confirmed)
-  O->>I: order.confirmed (finalize reservation)
-  O->>N: order.confirmed (email)
-  C->>G: GET /api/v1/orders/:id → CONFIRMED
+  C->>G: POST /api/v1/orders { userId, items }
+  G->>O: proxy with X-Correlation-Id
+  O->>I: GET product by id (price + availability snapshot)
+  O-->>C: 201 order PENDING, total computed server-side
+  C->>I: POST /api/v1/inventory/:id/reserve (atomic)
+  C->>P: POST /api/v1/payments/process (idempotencyKey)
+  C->>N: POST /api/v1/notifications (simulated email)
+  C->>O: GET /api/v1/orders/:id and history
 ```
 
-Full contract, retries, DLQ and failure flows:
-[docs/event-driven-architecture.md](docs/event-driven-architecture.md) and
-[docs/order-lifecycle.md](docs/order-lifecycle.md).
+`GET /api/v1/gateway/routes` returns the live proxy table;
+`GET /api/v1/gateway/auth-context` demonstrates the future auth integration point without
+verifying tokens. Full target event flow: [docs/event-driven-architecture.md](docs/event-driven-architecture.md)
+and [docs/order-lifecycle.md](docs/order-lifecycle.md).
 
 ## 8. Local setup
 
@@ -144,33 +147,41 @@ npm install
 npm run format:check
 ```
 
-Start infrastructure and the runnable backend foundation:
+Run everything with Docker Compose (recommended):
 
 ```powershell
 copy .env.example .env
-npm run dev:infra                         # MongoDB rs0 + Redis + Kafka
-npm run dev:order                         # Order Service foundation on http://localhost:3001
-```
-
-Or start everything, including the backend container, with Docker Compose:
-
-```powershell
 npm run dev:stack
 npm run dev:down
 ```
 
-Useful endpoints once running:
+Or run infrastructure in Compose and Node processes on the host:
+
+```powershell
+npm run dev:infra
+npm run dev:gateway        # http://localhost:3000
+npm run dev:order          # http://localhost:3001
+npm run dev:inventory      # http://localhost:3002
+npm run dev:payment        # http://localhost:3003
+npm run dev:notification   # http://localhost:3004
+```
+
+Useful endpoints:
 
 | URL | Purpose |
 | --- | --- |
-| `http://localhost:3001/api/v1/health` | Liveness |
-| `http://localhost:3001/api/v1/health/ready` | MongoDB/Redis/Kafka readiness |
-| `http://localhost:3001/api/v1/docs` | Swagger UI |
+| `http://localhost:3000/api/v1/health` | Gateway liveness |
+| `http://localhost:3000/api/v1/gateway/routes` | Live proxy route table |
+| `http://localhost:3000/api/v1/docs` | Gateway Swagger UI |
+| `http://localhost:3001/api/v1/docs` | Order Service Swagger UI |
+| `http://localhost:3002/api/v1/docs` | Inventory Service Swagger UI |
+| `http://localhost:3003/api/v1/docs` | Payment Service Swagger UI |
+| `http://localhost:3004/api/v1/docs` | Notification Service Swagger UI |
 
-Local MongoDB runs as a **single-node replica set (`rs0`)** so Mongoose multi-document transactions
-work. Host-side Node processes use `directConnection=true`; Compose overrides the URI with
-`replicaSet=rs0` and the internal `mongo` hostname. Local Compose disables MongoDB auth; hosted
-environments use MongoDB Atlas M10+ with credentials in secrets and the managed services listed in
+Every service also exposes `/api/v1/health` and `/api/v1/health/ready`. Local MongoDB runs as a
+**single-node replica set (`rs0`)**; host-side Node processes use `directConnection=true`, while
+Compose overrides the URI with `replicaSet=rs0` and the internal `mongo` hostname. Local Compose
+disables MongoDB auth; hosted environments use Atlas credentials in secrets. See
 [deploy/README.md](deploy/README.md).
 
 Verification commands:
@@ -180,16 +191,20 @@ npm run build
 npm run typecheck
 npm run lint
 npm run format:check
-npm run test:order
+npm test
 ```
+
+Domain-specific suites: `npm run test:order`, `test:inventory`, `test:payment`,
+`test:notification`, `test:gateway`. Database tests use `mongodb-memory-server`, so no running
+Compose stack is required for `npm test`.
 
 ## 9. Documentation
 
 - [Architecture](docs/architecture.md)
-- [Database design](docs/database-design.md)
 - [API documentation](docs/api-documentation.md)
-- [Event-driven architecture](docs/event-driven-architecture.md)
-- [Order lifecycle](docs/order-lifecycle.md)
+- [Database design](docs/database-design.md)
+- [Event-driven architecture (Phase 4 target)](docs/event-driven-architecture.md)
+- [Order lifecycle (Phase 4 target)](docs/order-lifecycle.md)
 - [Technical decisions / ADRs](docs/technical-decisions.md)
 - [Implementation checklist](docs/implementation-checklist.md)
 - [Deployment (local + hosted)](deploy/README.md)
@@ -197,6 +212,7 @@ npm run test:order
 
 ## 10. Future improvements
 
-Out of scope but documented for interviews: refresh tokens, Debezium CDC outbox, per-tenant rate
-limits, WebSockets/SSE order updates, real payment provider adapter, Kubernetes manifests,
-distributed tracing (OpenTelemetry), read replicas, splitting Atlas databases into separate clusters.
+Out of scope for Phase 3 but documented for interviews: Kafka topics/outbox/saga/compensation,
+idempotent consumers and DLQ, Redis catalogue caching and rate limiting, JWT/RBAC enforcement,
+refresh tokens, OpenTelemetry, read replicas, real payment provider adapter, Kubernetes manifests,
+and the React storefront.

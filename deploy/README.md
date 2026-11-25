@@ -1,134 +1,159 @@
 # Deployment guide
 
-**Status:** Phase 2 local infrastructure is implemented and verified with Docker Compose. Only the
-Order Service foundation has a Dockerfile; gateway and domain services remain future work.
+**Status:** Phase 3 local deployment is implemented and verified. One parameterized backend image
+builds the gateway and all four domain services; Docker Compose runs MongoDB, Redis, Kafka and the
+five NestJS deployables.
 
 ## 1. Hosting model
 
 | Concern | Local development | Hosted |
 | --- | --- | --- |
 | Source | Working copy | **GitHub** monorepo, branch protection on `main`, required CI checks |
-| Web | Vite dev server on 5173 | **Vercel** (static build from `apps/web`) |
+| Web | Not implemented (Vite dev server planned on 5173) | **Vercel** (static build from `apps/web`, future phase) |
 | Backend | Docker Compose, ports 3000–3004 | **Render** Docker Web Services, one per deployable, always-on instances |
 | Database | MongoDB 7 single-node replica set `rs0` | **MongoDB Atlas M10+** (four databases in one cluster) |
-| Cache / limits | Redis 7 container | **Upstash Redis** (TLS/RESP endpoint) |
-| Messaging | Kafka 3.x KRaft container | **Confluent Cloud** (topics, ACLs, retry/DLQ) |
+| Cache / limits | Redis 7 container (infra only in Phase 3) | **Upstash Redis** (Phase 5) |
+| Messaging | Kafka 3.x KRaft container (infra only in Phase 3) | **Confluent Cloud** (Phase 4) |
 | Secrets | `.env` (gitignored) | Vercel/Render/GitHub Actions secret stores |
 
 ```mermaid
 flowchart LR
-  GH["GitHub monorepo<br/>Actions CI required"] -->|auto-deploy| V["Vercel<br/>React web"]
-  GH -->|auto-deploy| G["Render<br/>api-gateway"]
+  GH["GitHub monorepo<br/>Actions CI required"] -->|auto-deploy| G["Render<br/>api-gateway"]
   GH -->|auto-deploy| O["Render<br/>order-service"]
   GH -->|auto-deploy| I["Render<br/>inventory-service"]
   GH -->|auto-deploy| P["Render<br/>payment-service"]
   GH -->|auto-deploy| N["Render<br/>notification-service"]
-  V -->|"HTTPS /api/v1"| G
+  C["Client"] --> G
   G --> O
   G --> I
+  G --> P
   G --> N
   O --> A[("MongoDB Atlas")]
   I --> A
   P --> A
   N --> A
-  G --> R[("Upstash Redis")]
-  O --> K[("Confluent Cloud Kafka")]
-  I --> K
-  P --> K
-  N --> K
 ```
 
-## 2. Local Docker Compose (Phase 2 scope)
+## 2. Local Docker Compose (Phase 3 scope)
 
 Files:
 
 - `docker-compose.infra.yml`: MongoDB replica set `rs0`, Redis, Kafka only.
-- `docker-compose.yml`: the same infrastructure plus the Order Service foundation container.
+- `docker-compose.yml`: the same infrastructure plus API Gateway, Order, Inventory, Payment and
+  Notification services.
+- `Dockerfile`: one shared multi-stage image. Build stage runs `npm run build`; runtime stage
+  installs production deps and copies all service `dist` folders. `SERVICE` selects the entrypoint:
+  `node apps/${SERVICE}/dist/main.js`.
 
 Commands from the repository root:
 
 ```powershell
 npm run dev:infra     # infrastructure only
-npm run dev:order     # build/run the local Node process against host-side infra
-npm run dev:stack     # infrastructure + backend container
+npm run dev:gateway   # local gateway process on 3000
+npm run dev:order     # local Order Service process on 3001
+npm run dev:inventory # local Inventory Service process on 3002
+npm run dev:payment   # local Payment Service process on 3003
+npm run dev:notification # local Notification Service process on 3004
+npm run dev:stack     # build and run infrastructure + all five backend containers
 npm run dev:down      # stop and remove containers/networks
 ```
 
-MongoDB must run as a **replica set** because Mongoose multi-document transactions and the outbox
-relay lease require it:
+MongoDB must run as a **replica set** because Mongoose multi-document transactions and the future
+outbox relay require it:
 
 ```yaml
 mongo:
   image: mongo:7
-  command: ["--replSet", "rs0", "--bind_ip_all"]
+  command: ['--replSet', 'rs0', '--bind_ip_all']
   healthcheck:
-    test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+    test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping')\""]
   volumes:
     - mongo-data:/data/db
 ```
 
 A one-time init container runs `rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]})`.
-`depends_on` health conditions gate the backend services on Mongo, Redis and Kafka readiness.
+`depends_on` health conditions gate services on Mongo readiness. Local Compose intentionally runs
+MongoDB **without auth**: enabling authorization together with a replica set requires a shared
+`keyFile`, which adds secret handling to local development. Hosted Atlas clusters keep
+authentication enabled, with credentials supplied only through `MONGODB_URI_*` secrets.
 
-Local Compose intentionally runs MongoDB **without auth**: enabling authorization together with a
-replica set requires a shared `keyFile`, which adds secret handling to local development. Hosted
-Atlas clusters keep authentication enabled, with credentials supplied only through `MONGODB_URI_*`
-secrets.
+Host ports published by `docker-compose.yml`:
 
-Host ports currently published: MongoDB 27017, Redis 6379, Kafka 9092 and the Order Service
-foundation 3001. Web 5173 and gateway 3000 are future phases; the other domain service ports remain
-internal until their services are implemented.
+| Port | Service |
+| --- | --- |
+| 27017 | MongoDB `rs0` |
+| 6379 | Redis |
+| 9092 | Kafka |
+| 3000 | API Gateway |
+| 3001 | Order Service |
+| 3002 | Inventory Service |
+| 3003 | Payment Service |
+| 3004 | Notification Service |
+
+All five backend services expose `/api/v1/health`, `/api/v1/health/ready` and `/api/v1/docs`.
+Compose healthchecks use `127.0.0.1` rather than `localhost`: Alpine resolves `localhost` to IPv6
+first, while Nest binds the IPv4 `0.0.0.0` address. Smoke-check the stack with:
+
+```powershell
+docker compose --env-file .env -f deploy/docker-compose.yml config
+npm run dev:stack
+```
+
+Then request `http://localhost:3000/api/v1/gateway/routes` and proxy a domain request such as
+`http://localhost:3000/api/v1/inventory/products`. In hosted environments only the gateway is
+publicly exposed; the direct service ports are published locally for debugging and Swagger access.
 
 ## 3. GitHub
 
 - Single repository; `.env` and secrets never committed (`.gitignore` already excludes them).
-- GitHub Actions runs install, lint, typecheck, unit, integration and build on every push/PR.
-- `main` is protected: CI must pass before Vercel/Render auto-deploy consumes the commit.
+- GitHub Actions will run install, lint, typecheck, unit, integration and build on every push/PR
+  (workflow is Phase 7).
 - `.env.example` documents every variable without real values.
 
-## 4. Vercel (web)
+## 4. Vercel (web, future phase)
 
 - Import the GitHub repo; set **Root Directory** to `apps/web`.
 - Framework preset: Vite; build command `npm run build`, output `dist` (adjusted for the workspace root).
 - Environment: `VITE_API_BASE_URL=https://<gateway-host>/api/v1`.
-- Preview deployments per PR use the same gateway staging URL.
 - Gateway `CORS_ORIGINS` must include the Vercel production domain and preview domain pattern.
-
-Vercel is used only for the React client. Long-running NestJS processes and Kafka consumers are
-not deployed as serverless functions.
+- Vercel is used only for the React client; NestJS processes and future Kafka consumers are not
+  deployed as serverless functions.
 
 ## 5. Render (backend)
 
-Five separate Docker Web Services from the same repo/commit:
+Five separate Docker Web Services from the same repo/commit use the same build context and
+`dockerfile: deploy/Dockerfile`; set the build arg `SERVICE` per service.
 
 | Service | Internal port | Key env vars |
 | --- | --- | --- |
-| `api-gateway` | 3000 | `JWT_SECRET`, `REDIS_URL`, `ORDER_SERVICE_URL`, `INVENTORY_SERVICE_URL`, `NOTIFICATION_SERVICE_URL`, `CORS_ORIGINS` |
-| `order-service` | 3001 | `MONGODB_URI_ORDER`, `KAFKA_BROKERS`, `JWT_SECRET` |
-| `inventory-service` | 3002 | `MONGODB_URI_INVENTORY`, `KAFKA_BROKERS`, `REDIS_URL` |
-| `payment-service` | 3003 | `MONGODB_URI_PAYMENT`, `KAFKA_BROKERS`, `PAYMENT_SIMULATION_MAX_DELAY_MS` |
-| `notification-service` | 3004 | `MONGODB_URI_NOTIFICATION`, `KAFKA_BROKERS` |
+| `api-gateway` (build arg `api-gateway`) | 3000 | `CORS_ORIGINS`, `ORDER_SERVICE_URL`, `INVENTORY_SERVICE_URL`, `PAYMENT_SERVICE_URL`, `NOTIFICATION_SERVICE_URL` |
+| `order-service` | 3001 | `MONGODB_URI_ORDER`, `INVENTORY_SERVICE_URL`, `REDIS_URL`, `KAFKA_BROKERS` |
+| `inventory-service` | 3002 | `MONGODB_URI_INVENTORY` |
+| `payment-service` | 3003 | `MONGODB_URI_PAYMENT` |
+| `notification-service` | 3004 | `MONGODB_URI_NOTIFICATION` |
 
-- Health check path: `/health/ready` on each service.
-- Use always-on (paid) instances: Kafka consumers must not be stopped by free-tier sleeping.
-- Render internal service URLs are injected into the gateway; no service is publicly exposed
-  except the gateway.
+- Docker build context: repository root; Dockerfile: `deploy/Dockerfile`; build arg:
+  `SERVICE=<service-folder>`.
+- Health check path: `/api/v1/health`; readiness: `/api/v1/health/ready`.
+- Use always-on (paid) instances when Phase 4 Kafka consumers are added.
+- Render internal service URLs are injected into the gateway; only the gateway is publicly exposed.
 - Rollback: redeploy the previous green commit from GitHub.
 
 ## 6. Managed data infrastructure
 
-- **MongoDB Atlas M10+**: one cluster, four databases (`orderflow_*`). M10+ is chosen because
-  multi-document transactions require a replica set; verify current Atlas tier limits before
-  choosing a cheaper tier. Each service receives only its own URI via Render secrets.
-- **Upstash Redis**: catalogue cache and rate-limit counters, TLS endpoint.
-- **Confluent Cloud**: create the application topics plus `<topic>.retry.1`, `.retry.2` and `.dlq`
-  (see [docs/event-driven-architecture.md](../docs/event-driven-architecture.md)). ACLs restrict
-  each service to its own topics/consumer groups. No Schema Registry is added.
+- **MongoDB Atlas M10+**: one cluster, four databases (`orderflow_order`, `orderflow_inventory`,
+  `orderflow_payment`, `orderflow_notification`). M10+ is chosen because multi-document transactions
+  require a replica set. Each service receives only its own URI via Render secrets.
+- **Upstash Redis**: planned for catalogue cache and rate-limit counters (Phase 5), TLS endpoint.
+- **Confluent Cloud**: application topics plus retry/DLQ topics will be created in Phase 4
+  (see [../docs/event-driven-architecture.md](../docs/event-driven-architecture.md)). No Schema
+  Registry is added.
 
 ## 7. Deployment flow
 
-1. Developer pushes to a branch → GitHub Actions validates → Vercel preview is created.
+1. Developer pushes to a branch → CI validates → Vercel preview is created (once web exists).
 2. PR merged to `main` → CI must pass → Vercel production + Render services deploy automatically.
-3. Verify `/health/ready` on all five backend services, then smoke-test `POST /api/v1/auth/login`
-   and `GET /api/v1/products` against the gateway.
+3. Verify `/api/v1/health/ready` on all five backend services, then smoke-test
+   `GET /api/v1/gateway/routes`, `GET /api/v1/inventory/products` and `POST /api/v1/orders`
+   against the gateway.
 4. Secrets are rotated in the Vercel/Render/Atlas dashboards, never in repository files.

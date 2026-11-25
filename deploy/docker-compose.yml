@@ -86,15 +86,18 @@ services:
   order-service:
     build:
       context: ..
-      dockerfile: apps/order-service/Dockerfile
+      dockerfile: deploy/Dockerfile
+      args:
+        SERVICE: order-service
     restart: unless-stopped
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      PORT: 3001
+      PORT_ORDER_SERVICE: 3001
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       MONGODB_URI_ORDER: mongodb://mongo:27017/orderflow_order?replicaSet=rs0
       MONGODB_AUTO_INDEX: 'true'
+      INVENTORY_SERVICE_URL: http://inventory-service:3002
       REDIS_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
       KAFKA_ENABLED: 'true'
@@ -114,7 +117,143 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget -qO- http://localhost:3001/api/v1/health >/dev/null 2>&1 || exit 1
+        - wget -qO- http://127.0.0.1:3001/api/v1/health >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  inventory-service:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        SERVICE: inventory-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT_INVENTORY_SERVICE: 3002
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      MONGODB_URI_INVENTORY: mongodb://mongo:27017/orderflow_inventory?replicaSet=rs0
+      MONGODB_AUTO_INDEX: 'true'
+      REDIS_ENABLED: 'false'
+      KAFKA_ENABLED: 'false'
+    ports:
+      - '${PORT_INVENTORY_SERVICE:-3002}:3002'
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    networks:
+      - orderflow
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:3002/api/v1/health >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  payment-service:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        SERVICE: payment-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT_PAYMENT_SERVICE: 3003
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      MONGODB_URI_PAYMENT: mongodb://mongo:27017/orderflow_payment?replicaSet=rs0
+      MONGODB_AUTO_INDEX: 'true'
+      REDIS_ENABLED: 'false'
+      KAFKA_ENABLED: 'false'
+    ports:
+      - '${PORT_PAYMENT_SERVICE:-3003}:3003'
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    networks:
+      - orderflow
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:3003/api/v1/health >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        SERVICE: notification-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT_NOTIFICATION_SERVICE: 3004
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      MONGODB_URI_NOTIFICATION: mongodb://mongo:27017/orderflow_notification?replicaSet=rs0
+      MONGODB_AUTO_INDEX: 'true'
+      REDIS_ENABLED: 'false'
+      KAFKA_ENABLED: 'false'
+    ports:
+      - '${PORT_NOTIFICATION_SERVICE:-3004}:3004'
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    networks:
+      - orderflow
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:3004/api/v1/health >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        SERVICE: api-gateway
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT_API_GATEWAY: 3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      ORDER_SERVICE_URL: http://order-service:3001
+      INVENTORY_SERVICE_URL: http://inventory-service:3002
+      PAYMENT_SERVICE_URL: http://payment-service:3003
+      NOTIFICATION_SERVICE_URL: http://notification-service:3004
+      REDIS_ENABLED: 'false'
+      KAFKA_ENABLED: 'false'
+    ports:
+      - '${PORT_API_GATEWAY:-3000}:3000'
+    depends_on:
+      order-service:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    networks:
+      - orderflow
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:3000/api/v1/health >/dev/null 2>&1 || exit 1
       interval: 10s
       timeout: 5s
       retries: 10
