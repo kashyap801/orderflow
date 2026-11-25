@@ -35,7 +35,7 @@ These are deliberately small and are added incrementally on top of the working P
    notification.
 4. **Redis (implemented)** — Inventory caches product reads with a short TTL and invalidates on
    writes.
-5. **React web app** — login, catalogue, cart, checkout, orders and a simple admin form.
+5. **React web app (implemented)** — login, catalogue, cart, checkout, orders and an admin form.
 6. **GitHub + Vercel** — source stays on GitHub; the static frontend is deployed by Vercel.
 
 There is no Saga orchestrator, Transactional Outbox, DLQ, retry topic, distributed transaction,

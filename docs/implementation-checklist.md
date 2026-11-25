@@ -65,7 +65,7 @@ This is the approved short scope. Older Phase 4–7 sections below remain as ref
 - [x] Minimal `ORDER_CREATED` event in `libs/contracts`
 - [x] Kafka producer in Order Service and notification consumer in Notification Service
 - [x] Redis product-read cache in Inventory Service with write invalidation
-- [ ] Simple React frontend: login, catalogue, cart, checkout, orders, admin product form
+- [x] Simple React frontend: login, catalogue, cart, checkout, orders, admin product form
 - [ ] GitHub Actions checks and Vercel config for the frontend
 - [ ] Verify: existing 79 tests plus new essential tests, Compose smoke, frontend build
 
@@ -132,3 +132,5 @@ This is the approved short scope. Older Phase 4–7 sections below remain as ref
 | 2026-11-25 | Simplified 4 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS |
 | 2026-11-25 | Simplified 4 | `npm run test:order` | PASS — 7 suites, 33 tests (includes auth service) |
 | 2026-11-25 | Simplified 4 | `npm run test:gateway` | PASS — 3 suites, 13 tests (includes JWT middleware) |
+| 2026-11-25 | Simplified 5 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS — includes React/Vite production build |
+| 2026-11-25 | Simplified 5 | `npm test` | PASS — 22 suites, 96 tests (all workspaces) |
