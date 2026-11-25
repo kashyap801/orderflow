@@ -1,6 +1,7 @@
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppLogger, type CorrelationRequest } from '@orderflow/common';
+import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 
 export interface GatewayRoute {
@@ -55,7 +56,13 @@ export class ProxyMiddleware implements NestMiddleware {
       return;
     }
 
-    const correlationId = (request as CorrelationRequest).correlationId ?? 'unknown';
+    const supplied = request.header('x-correlation-id')?.trim();
+    const correlationId =
+      (request as CorrelationRequest).correlationId ??
+      (supplied !== undefined && supplied.length > 0 && supplied.length <= 64
+        ? supplied
+        : randomUUID());
+    (request as CorrelationRequest).correlationId = correlationId;
     const target = this.buildTarget(request.originalUrl, route);
 
     try {

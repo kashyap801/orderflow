@@ -77,6 +77,29 @@ describe('ProxyMiddleware unit rules', () => {
     expect(response.json).toHaveBeenCalledWith({ data: { ok: true }, correlationId: 'gateway-id' });
   });
 
+  it('generates a correlation id when the request does not provide one', async () => {
+    fetchMock.mockResolvedValue({
+      status: 200,
+      headers: new Map([['content-type', 'application/json']]),
+      text: async () => JSON.stringify({ data: { ok: true }, correlationId: 'upstream' }),
+    });
+    const middleware = new ProxyMiddleware(config(urls), new AppLogger('Test'));
+    const response = responseMock();
+    const request = {
+      originalUrl: '/api/v1/orders',
+      method: 'GET',
+      body: {},
+      header: () => undefined,
+    } as unknown as Request;
+
+    await middleware.use(request, response, jest.fn() as unknown as NextFunction);
+
+    const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const correlationId = (options.headers as Record<string, string>)['x-correlation-id'];
+    expect(correlationId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(response.setHeader).toHaveBeenCalledWith('X-Correlation-Id', correlationId);
+  });
+
   it('normalizes unreachable upstream services as 502', async () => {
     fetchMock.mockRejectedValue(new Error('ECONNREFUSED'));
     const middleware = new ProxyMiddleware(config(urls), new AppLogger('Test'));
