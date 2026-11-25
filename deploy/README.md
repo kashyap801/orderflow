@@ -107,18 +107,19 @@ publicly exposed; the direct service ports are published locally for debugging a
 ## 3. GitHub
 
 - Single repository; `.env` and secrets never committed (`.gitignore` already excludes them).
-- GitHub Actions will run install, lint, typecheck, unit, integration and build on every push/PR
-  (workflow is Phase 7).
+- `.github/workflows/ci.yml` runs install, build (backend + web), typecheck, lint, format check and
+  all tests on every push and pull request to `main`.
 - `.env.example` documents every variable without real values.
 
-## 4. Vercel (web, future phase)
+## 4. Vercel (web)
 
 - Import the GitHub repo; set **Root Directory** to `apps/web`.
-- Framework preset: Vite; build command `npm run build`, output `dist` (adjusted for the workspace root).
-- Environment: `VITE_API_BASE_URL=https://<gateway-host>/api/v1`.
+- Framework preset: Vite; build command `npm run build`, output `dist`.
+- Environment: `VITE_API_URL=https://<gateway-host>` (no trailing `/api`).
+- `apps/web/vercel.json` rewrites unknown paths to `index.html` for React Router.
 - Gateway `CORS_ORIGINS` must include the Vercel production domain and preview domain pattern.
-- Vercel is used only for the React client; NestJS processes and future Kafka consumers are not
-  deployed as serverless functions.
+- Vercel hosts only the React client; NestJS services and Kafka consumers are not serverless
+  functions.
 
 ## 5. Render (backend)
 

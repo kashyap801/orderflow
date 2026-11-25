@@ -25,6 +25,7 @@ COPY libs/contracts/package.json ./libs/contracts/package.json
 COPY libs/testing/package.json ./libs/testing/package.json
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=build /workspace/libs/common/dist ./libs/common/dist
+COPY --from=build /workspace/libs/contracts/dist ./libs/contracts/dist
 COPY --from=build /workspace/apps/api-gateway/dist ./apps/api-gateway/dist
 COPY --from=build /workspace/apps/inventory-service/dist ./apps/inventory-service/dist
 COPY --from=build /workspace/apps/notification-service/dist ./apps/notification-service/dist

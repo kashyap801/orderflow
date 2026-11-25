@@ -65,6 +65,7 @@ export class KafkaService implements OnApplicationShutdown {
       consumer = this.getClient().consumer({
         groupId,
         sessionTimeout: 10000,
+        allowAutoTopicCreation: true,
       });
       this.consumers.set(groupId, consumer);
     }
@@ -86,7 +87,24 @@ export class KafkaService implements OnApplicationShutdown {
   ): Promise<void> {
     if (!this.enabled) return;
     const consumer = this.getConsumer(groupId);
-    await consumer.subscribe({ topic, fromBeginning: false });
+
+    // A fresh broker may not have created the topic yet on the first metadata request.
+    let subscribed = false;
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      try {
+        await consumer.subscribe({ topic, fromBeginning: false });
+        subscribed = true;
+        break;
+      } catch (error) {
+        this.logger.warn(`Topic ${topic} not ready (attempt ${attempt}/5)`, error);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+    if (!subscribed) {
+      this.logger.warn(`Could not subscribe to ${topic}; notifications disabled`);
+      return;
+    }
+
     await consumer.run({
       eachMessage: async ({ message }) => {
         if (message.value === null) return;

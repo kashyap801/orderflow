@@ -13,6 +13,12 @@ export interface GatewayRoute {
 
 export const GATEWAY_ROUTES: readonly GatewayRoute[] = [
   {
+    prefix: '/api/v1/auth',
+    service: 'order-service',
+    targetEnvKey: 'ORDER_SERVICE_URL',
+    upstreamPrefix: '/api/v1/auth',
+  },
+  {
     prefix: '/api/v1/orders',
     service: 'order-service',
     targetEnvKey: 'ORDER_SERVICE_URL',

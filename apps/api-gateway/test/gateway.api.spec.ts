@@ -93,7 +93,7 @@ describe('Gateway API', () => {
 
   it('exposes the route table and auth integration point', async () => {
     const routes = await request(app.getHttpServer()).get('/api/v1/gateway/routes').expect(200);
-    expect(routes.body.data).toHaveLength(4);
+    expect(routes.body.data).toHaveLength(5);
 
     const context = await request(app.getHttpServer())
       .get('/api/v1/gateway/auth-context')

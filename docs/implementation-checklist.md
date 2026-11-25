@@ -66,8 +66,8 @@ This is the approved short scope. Older Phase 4–7 sections below remain as ref
 - [x] Kafka producer in Order Service and notification consumer in Notification Service
 - [x] Redis product-read cache in Inventory Service with write invalidation
 - [x] Simple React frontend: login, catalogue, cart, checkout, orders, admin product form
-- [ ] GitHub Actions checks and Vercel config for the frontend
-- [ ] Verify: existing 79 tests plus new essential tests, Compose smoke, frontend build
+- [x] GitHub Actions checks and Vercel config for the frontend
+- [x] Verify: existing 79 tests plus new essential tests, Compose smoke, frontend build
 
 ## Phase 4 — Distributed systems (reference only)
 
@@ -134,3 +134,7 @@ This is the approved short scope. Older Phase 4–7 sections below remain as ref
 | 2026-11-25 | Simplified 4 | `npm run test:gateway` | PASS — 3 suites, 13 tests (includes JWT middleware) |
 | 2026-11-25 | Simplified 5 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS — includes React/Vite production build |
 | 2026-11-25 | Simplified 5 | `npm test` | PASS — 22 suites, 96 tests (all workspaces) |
+| 2026-11-25 | Simplified 6 | `npm run build`, `typecheck`, `lint`, `format:check`, `npm test` | PASS |
+| 2026-11-25 | Simplified 6 | `docker compose config` + cold start with fresh volumes | PASS — all five services healthy |
+| 2026-11-25 | Simplified 6 | Gateway end-to-end smoke | PASS — register/login, admin product create, order pricing, Kafka notification, 401 without token |
+| 2026-11-25 | Simplified 6 | `docker compose down` | PASS — stack stopped cleanly |
