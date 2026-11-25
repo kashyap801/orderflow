@@ -71,9 +71,10 @@ export class EnvironmentVariables {
   @MinLength(1)
   CORS_ORIGINS = 'http://localhost:5173';
 
+  @IsOptional()
   @IsString()
   @MinLength(1)
-  MONGODB_URI_ORDER!: string;
+  MONGODB_URI_ORDER?: string;
 
   @IsOptional()
   @IsString()

@@ -23,6 +23,16 @@ describe('validateEnvironment', () => {
     expect(environment.MONGODB_MAX_RETRIES).toBe(2);
   });
 
+  it('allows a service to configure only its own MongoDB URI', () => {
+    const environment = validateEnvironment({
+      NODE_ENV: 'test',
+      MONGODB_URI_INVENTORY: 'mongodb://localhost:27017/orderflow_inventory',
+    });
+
+    expect(environment.MONGODB_URI_ORDER).toBeUndefined();
+    expect(environment.MONGODB_URI_INVENTORY).toBe('mongodb://localhost:27017/orderflow_inventory');
+  });
+
   it('rejects an invalid environment', () => {
     expect(() => validateEnvironment({ ...valid, NODE_ENV: 'invalid' })).toThrow(
       /Invalid environment configuration/,

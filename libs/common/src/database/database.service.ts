@@ -74,7 +74,12 @@ export class DatabaseService implements OnApplicationBootstrap, OnApplicationShu
   private async connectWithRetry(attempt = 1): Promise<void> {
     if (this.stopped || mongoose.connection.readyState === 1) return;
 
-    const uri = this.config.getOrThrow<string>(this.uriEnvKey);
+    const uri = this.config.get<string>(this.uriEnvKey);
+    if (uri === undefined || uri.length === 0) {
+      this.logger.error(`Missing MongoDB URI: ${this.uriEnvKey}`);
+      return;
+    }
+
     const options: ConnectOptions = {
       serverSelectionTimeoutMS: this.config.get<number>(
         'MONGODB_SERVER_SELECTION_TIMEOUT_MS',
