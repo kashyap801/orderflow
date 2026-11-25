@@ -153,6 +153,11 @@ export class EnvironmentVariables {
   @IsString()
   @MinLength(1)
   KAFKA_CLIENT_ID = 'orderflow';
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  KAFKA_CONSUMER_GROUP_ID = 'orderflow-notification';
 }
 
 export function validateEnvironment(raw: Record<string, unknown>): EnvironmentVariables {

@@ -22,6 +22,7 @@ export interface Notification {
   subject: string;
   message: string;
   metadata: Record<string, unknown>;
+  eventId?: string;
   deliveryStatus: DeliveryStatus;
   deliveryMessageId?: string;
   deliveredAt?: Date;
@@ -42,6 +43,7 @@ const NotificationSchema = new Schema<Notification>(
     subject: { type: String, required: true, maxlength: 200 },
     message: { type: String, required: true, maxlength: 2000 },
     metadata: { type: Schema.Types.Mixed, default: {} },
+    eventId: { type: String },
     deliveryStatus: {
       type: String,
       required: true,
@@ -57,6 +59,7 @@ const NotificationSchema = new Schema<Notification>(
 
 NotificationSchema.index({ userId: 1, createdAt: -1 });
 NotificationSchema.index({ type: 1, createdAt: -1 });
+NotificationSchema.index({ eventId: 1 }, { unique: true, sparse: true });
 
 export function notificationModelFactory(): NotificationModel {
   return (

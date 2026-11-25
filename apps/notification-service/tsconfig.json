@@ -7,6 +7,7 @@
     "paths": {
       "@orderflow/common": ["libs/common/dist/index.d.ts"],
       "@orderflow/common/*": ["libs/common/dist/*"],
+      "@orderflow/contracts": ["libs/contracts/dist/index.d.ts"],
       "@orderflow/testing": ["libs/testing/src/index.ts"],
       "@orderflow/testing/*": ["libs/testing/src/*"]
     }

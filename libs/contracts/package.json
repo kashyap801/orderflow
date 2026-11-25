@@ -2,5 +2,15 @@
   "name": "@orderflow/contracts",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared TypeScript event envelopes, event payload types, DTO contracts and topic constants"
+  "description": "Minimal shared event types and topic constants used by Order and Notification",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "lint": "eslint src --ext .ts --config ../../eslint.config.js"
+  }
 }

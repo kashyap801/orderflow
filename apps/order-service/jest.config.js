@@ -5,6 +5,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   moduleNameMapper: {
     '^@orderflow/common$': '<rootDir>/../../libs/common/src/index.ts',
+    '^@orderflow/contracts$': '<rootDir>/../../libs/contracts/src/index.ts',
     '^@orderflow/testing$': '<rootDir>/../../libs/testing/src/index.ts',
   },
   transform: {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { FoundationModule } from '@orderflow/common';
+import { OrderEventPublisher } from './events/order-event-publisher';
 import { HttpInventoryClient, INVENTORY_CLIENT } from './orders/inventory-client';
 import { ORDER_MODEL, orderModelFactory } from './orders/order.schema';
 import { OrdersController } from './orders/orders.controller';
@@ -14,6 +15,7 @@ import { OrdersService } from './orders/orders.service';
   controllers: [OrdersController],
   providers: [
     OrdersService,
+    OrderEventPublisher,
     { provide: ORDER_MODEL, useFactory: orderModelFactory },
     { provide: INVENTORY_CLIENT, useClass: HttpInventoryClient },
   ],

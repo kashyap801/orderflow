@@ -12,6 +12,7 @@
     "libs/*"
   ],
   "scripts": {
+    "build:contracts": "npm run build --workspace=@orderflow/contracts",
     "build:common": "npm run build --workspace=@orderflow/common",
     "build:testing": "npm run build --workspace=@orderflow/testing",
     "build:order": "npm run build --workspace=@orderflow/order-service",
@@ -19,7 +20,7 @@
     "build:payment": "npm run build --workspace=@orderflow/payment-service",
     "build:notification": "npm run build --workspace=@orderflow/notification-service",
     "build:gateway": "npm run build --workspace=@orderflow/api-gateway",
-    "build": "npm run build:common && npm run build:testing && npm run build:order && npm run build:inventory && npm run build:payment && npm run build:notification && npm run build:gateway",
+    "build": "npm run build:contracts && npm run build:common && npm run build:testing && npm run build:order && npm run build:inventory && npm run build:payment && npm run build:notification && npm run build:gateway",
     "dev:order": "npm run dev --workspace=@orderflow/order-service",
     "start:order": "npm run start --workspace=@orderflow/order-service",
     "dev:inventory": "npm run dev --workspace=@orderflow/inventory-service",

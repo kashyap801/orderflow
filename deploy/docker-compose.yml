@@ -202,12 +202,17 @@ services:
       MONGODB_URI_NOTIFICATION: mongodb://mongo:27017/orderflow_notification?replicaSet=rs0
       MONGODB_AUTO_INDEX: 'true'
       REDIS_ENABLED: 'false'
-      KAFKA_ENABLED: 'false'
+      KAFKA_ENABLED: 'true'
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: orderflow-notification-dev
+      KAFKA_CONSUMER_GROUP_ID: orderflow-notification-dev
     ports:
       - '${PORT_NOTIFICATION_SERVICE:-3004}:3004'
     depends_on:
       mongo-init:
         condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
     networks:
       - orderflow
     healthcheck:

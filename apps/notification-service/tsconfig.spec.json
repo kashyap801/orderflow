@@ -10,6 +10,7 @@
     "src/**/*.ts",
     "test/**/*.ts",
     "../../libs/common/src/**/*.ts",
+    "../../libs/contracts/src/**/*.ts",
     "../../libs/testing/src/**/*.ts"
   ]
 }

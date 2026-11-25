@@ -59,11 +59,11 @@ Update this file as work progresses. Each phase ends with a verification step.
 
 This is the approved short scope. Older Phase 4–7 sections below remain as reference only.
 
-- [ ] Add short current-state guide and mark advanced docs as reference
+- [x] Add short current-state guide and mark advanced docs as reference
 - [ ] Simple JWT register/login in Order Service and verification in the gateway
 - [ ] Basic `USER` / `ADMIN` roles; `ADMIN` required for product changes
-- [ ] Minimal `ORDER_CREATED` event in `libs/contracts`
-- [ ] Kafka producer in Order Service and notification consumer in Notification Service
+- [x] Minimal `ORDER_CREATED` event in `libs/contracts`
+- [x] Kafka producer in Order Service and notification consumer in Notification Service
 - [ ] Redis product-read cache in Inventory Service with write invalidation
 - [ ] Simple React frontend: login, catalogue, cart, checkout, orders, admin product form
 - [ ] GitHub Actions checks and Vercel config for the frontend
@@ -123,3 +123,7 @@ This is the approved short scope. Older Phase 4–7 sections below remain as ref
 | 2026-11-25 | 3 | `npm run build`, `typecheck`, `lint`, `format:check`, `npm test` | PASS — 79 tests across 16 suites |
 | 2026-11-25 | 3 | `docker compose config` and live Phase 3 stack smoke | PASS — gateway + 4 services healthy; domain Swagger and gateway proxy verified |
 | 2026-11-25 | 3 | `npm run dev:down` | PASS — stack stopped cleanly |
+| 2026-11-25 | Simplified 1 | `npm run format:check` | PASS — docs-only simplification |
+| 2026-11-25 | Simplified 2 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS — contracts package built first |
+| 2026-11-25 | Simplified 2 | `npm run test:order` | PASS — 6 suites, 29 tests (includes publisher) |
+| 2026-11-25 | Simplified 2 | `npm run test:notification` | PASS — 5 suites, 16 tests (includes consumer and event dedupe) |

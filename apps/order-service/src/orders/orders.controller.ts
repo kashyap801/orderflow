@@ -4,12 +4,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Optional,
   Param,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { OrderEventPublisher } from '../events/order-event-publisher';
 import {
   CreateOrderDto,
   ListOrdersQueryDto,
@@ -23,15 +25,20 @@ import { OrdersService } from './orders.service';
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly orders: OrdersService) {}
+  constructor(
+    private readonly orders: OrdersService,
+    @Optional() private readonly events?: OrderEventPublisher,
+  ) {}
 
   @Post()
   @ApiOperation({
     summary: 'Create an order; prices are resolved from Inventory, never from the request',
   })
   @ApiCreatedResponse({ description: 'Order created' })
-  create(@Body() input: CreateOrderDto): Promise<Order> {
-    return this.orders.create(input);
+  async create(@Body() input: CreateOrderDto): Promise<Order> {
+    const order = await this.orders.create(input);
+    await this.events?.publishCreated(order);
+    return order;
   }
 
   @Get()

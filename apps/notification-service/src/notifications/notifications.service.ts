@@ -1,5 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { createId } from '@orderflow/common';
+import { createId, isDuplicateKeyError } from '@orderflow/common';
+import type { OrderCreatedEvent } from '@orderflow/contracts';
 import type { FilterQuery } from 'mongoose';
 import { CreateNotificationDto, ListNotificationsQueryDto } from './dto';
 import { EMAIL_SENDER, type EmailSender } from './email-sender';
@@ -24,11 +25,7 @@ export class NotificationsService {
     @Inject(EMAIL_SENDER) private readonly emailSender: EmailSender,
   ) {}
 
-  /**
-   * Stable entry point for Phase 4 Kafka consumers: they build the same DTO from
-   * an event and call this method; no consumer logic is wired yet.
-   */
-  async create(input: CreateNotificationDto): Promise<Notification> {
+  async create(input: CreateNotificationDto, eventId?: string): Promise<Notification> {
     const notificationId = createId();
     let delivery: Awaited<ReturnType<EmailSender['send']>> | undefined;
     try {
@@ -49,11 +46,37 @@ export class NotificationsService {
       subject: input.subject,
       message: input.message,
       metadata: input.metadata ?? {},
+      ...(eventId === undefined ? {} : { eventId }),
       deliveryStatus: delivery === undefined ? 'FAILED' : 'SENT',
       ...(delivery === undefined
         ? {}
         : { deliveryMessageId: delivery.messageId, deliveredAt: delivery.deliveredAt }),
     });
+  }
+
+  async createFromOrderCreated(event: OrderCreatedEvent): Promise<Notification | undefined> {
+    const existing = await this.model.findOne({ eventId: event.eventId }).exec();
+    if (existing !== null) return existing;
+
+    try {
+      return await this.create(
+        {
+          userId: event.payload.userId,
+          type: 'ORDER_CREATED',
+          subject: 'Order received',
+          message: `Order ${event.payload.orderId} was received.`,
+          metadata: {
+            orderId: event.payload.orderId,
+            totalAmountCents: event.payload.totalAmountCents,
+            correlationId: event.correlationId,
+          },
+        },
+        event.eventId,
+      );
+    } catch (error) {
+      if (!isDuplicateKeyError(error)) throw error;
+      return (await this.model.findOne({ eventId: event.eventId }).exec()) ?? undefined;
+    }
   }
 
   async findById(id: string): Promise<Notification> {

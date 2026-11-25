@@ -1,12 +1,12 @@
 # @orderflow/contracts
 
-Shared, dependency-light TypeScript contracts imported by every service.
+Tiny, dependency-free TypeScript types shared by the services.
 
-Planned contents:
+This package intentionally implements **only** the simplified event flow:
 
-- `EventEnvelope<T>` and `CommandEnvelope<T>` (eventId, correlationId, causationId, version, occurredAt).
-- Versioned payload types for every topic listed in [docs/event-driven-architecture.md](../../docs/event-driven-architecture.md).
-- Topic name constants (e.g. `ORDER_CREATED_V1`).
-- Public REST DTO shapes shared between the gateway and services.
+- `ORDER_CREATED_TOPIC` — `order.created.v1`
+- `EventEnvelope<T>` — basic `eventId`, `eventType`, `correlationId`, `occurredAt`, `producer`, payload
+- `OrderCreatedEvent` — emitted by Order Service after an order is saved
 
-Rule: this library must never import NestJS, Mongoose or any runtime infrastructure.
+The larger topic catalogue, versioning rules, retry topics and DLQ described in
+`docs/event-driven-architecture.md` are reference material only and are not implemented.
