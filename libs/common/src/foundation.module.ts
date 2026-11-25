@@ -15,21 +15,27 @@ import { RedisModule } from './infra/redis.module';
 import { AppLogger } from './logging/app-logger';
 
 export interface FoundationModuleOptions {
-  mongodbUriKey: string;
+  mongodbUriKey?: string;
+  enableMongo?: boolean;
 }
 
 @Global()
 @Module({})
 export class FoundationModule implements NestModule {
   static forRoot(options: FoundationModuleOptions): DynamicModule {
+    const enableMongo = options.enableMongo ?? options.mongodbUriKey !== undefined;
+
+    if (enableMongo && options.mongodbUriKey === undefined) {
+      throw new Error('FoundationModule requires mongodbUriKey when MongoDB is enabled');
+    }
+
+    const databaseImports = enableMongo
+      ? [DatabaseModule.forRoot(options.mongodbUriKey as string)]
+      : [];
+
     return {
       module: FoundationModule,
-      imports: [
-        AppConfigModule.forRoot(),
-        DatabaseModule.forRoot(options.mongodbUriKey),
-        RedisModule,
-        KafkaModule,
-      ],
+      imports: [AppConfigModule.forRoot(), ...databaseImports, RedisModule, KafkaModule],
       controllers: [HealthController],
       providers: [
         { provide: AppLogger, useFactory: () => new AppLogger('OrderFlow') },
@@ -38,7 +44,7 @@ export class FoundationModule implements NestModule {
       ],
       exports: [
         AppConfigModule,
-        DatabaseModule,
+        ...(enableMongo ? [DatabaseModule] : []),
         RedisModule,
         KafkaModule,
         AppLogger,

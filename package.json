@@ -13,8 +13,9 @@
   ],
   "scripts": {
     "build:common": "npm run build --workspace=@orderflow/common",
+    "build:testing": "npm run build --workspace=@orderflow/testing",
     "build:order": "npm run build --workspace=@orderflow/order-service",
-    "build": "npm run build:common && npm run build:order",
+    "build": "npm run build:common && npm run build:testing && npm run build:order",
     "dev:order": "npm run dev --workspace=@orderflow/order-service",
     "start:order": "npm run start --workspace=@orderflow/order-service",
     "test:order": "npm run test --workspace=@orderflow/order-service",
@@ -32,6 +33,7 @@
     "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
+    "mongodb-memory-server": "^10.4.3",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3"
   }

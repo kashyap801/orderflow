@@ -6,5 +6,10 @@
     "rootDir": ".",
     "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "../../libs/common/src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "../../libs/common/src/**/*.ts",
+    "../../libs/testing/src/**/*.ts"
+  ]
 }

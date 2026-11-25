@@ -1,7 +1,9 @@
+export * from './bootstrap/bootstrap-service';
 export * from './config/app-config.module';
 export * from './config/env.validation';
 export * from './database/database.module';
 export * from './database/database.service';
+export * from './database/mongo-errors';
 export * from './foundation.module';
 export * from './health/health.controller';
 export * from './health/health.service';
@@ -10,6 +12,7 @@ export * from './http/api-response.interceptor';
 export * from './http/all-exceptions.filter';
 export * from './http/correlation-context';
 export * from './http/correlation.middleware';
+export * from './ids';
 export * from './infra/kafka.module';
 export * from './infra/kafka.service';
 export * from './infra/redis.module';

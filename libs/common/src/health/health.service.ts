@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseService } from '../database/database.service';
 import { KafkaService } from '../infra/kafka.service';
@@ -14,7 +14,7 @@ export interface DependencyHealth {
 }
 
 export interface HealthChecks {
-  mongodb: DependencyHealth;
+  mongodb?: DependencyHealth;
   redis: DependencyHealth;
   kafka: DependencyHealth;
 }
@@ -37,15 +37,15 @@ export class HealthService {
   private readonly logger: AppLogger;
 
   constructor(
-    private readonly database: DatabaseService,
     private readonly redis: RedisService,
     private readonly kafka: KafkaService,
     config: ConfigService,
     logger: AppLogger,
+    @Optional() private readonly database?: DatabaseService,
   ) {
     this.logger = logger.withContext('Health');
     if (config.get<string>('NODE_ENV') !== 'test') {
-      this.logger.log(`Initialised; MongoDB=${database.getState()}`);
+      this.logger.log(`Initialised; MongoDB=${database?.getState() ?? 'disabled'}`);
     }
   }
 
@@ -59,8 +59,8 @@ export class HealthService {
 
   async getReadiness(): Promise<ReadinessResult> {
     const checks: HealthChecks = {
-      mongodb: await this.timeCheck(() => this.database.isReady()),
-      redis: await this.timeCheck(() => this.redis.isReady()),
+      ...(this.database === undefined ? {} : { mongodb: await this.timeCheck(this.database) }),
+      redis: await this.timeCheck(this.redis),
       kafka: this.kafka.isReady() ? { status: 'up' } : { status: 'down' },
     };
 
@@ -73,10 +73,12 @@ export class HealthService {
     };
   }
 
-  private async timeCheck(check: () => Promise<boolean>): Promise<DependencyHealth> {
+  private async timeCheck(service: {
+    isReady(): boolean | Promise<boolean>;
+  }): Promise<DependencyHealth> {
     const startedAt = Date.now();
     try {
-      const ready = await check();
+      const ready = await service.isReady();
       const latencyMs = Date.now() - startedAt;
       return ready ? { status: 'up', latencyMs } : { status: 'down', latencyMs };
     } catch (error) {
