@@ -169,8 +169,9 @@ Useful endpoints once running:
 
 Local MongoDB runs as a **single-node replica set (`rs0`)** so Mongoose multi-document transactions
 work. Host-side Node processes use `directConnection=true`; Compose overrides the URI with
-`replicaSet=rs0` and the internal `mongo` hostname. Hosted environments use MongoDB Atlas M10+ and
-the managed services listed in [deploy/README.md](deploy/README.md).
+`replicaSet=rs0` and the internal `mongo` hostname. Local Compose disables MongoDB auth; hosted
+environments use MongoDB Atlas M10+ with credentials in secrets and the managed services listed in
+[deploy/README.md](deploy/README.md).
 
 Verification commands:
 

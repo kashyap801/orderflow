@@ -1,8 +1,7 @@
 # Deployment guide
 
-**Status:** Phase 2 local infrastructure files now exist. Only the Order Service foundation has a
-Dockerfile; gateway and domain services remain future work. Docker was not available in the build
-environment, so Compose files were syntax-checked but not started.
+**Status:** Phase 2 local infrastructure is implemented and verified with Docker Compose. Only the
+Order Service foundation has a Dockerfile; gateway and domain services remain future work.
 
 ## 1. Hosting model
 
@@ -70,6 +69,11 @@ mongo:
 
 A one-time init container runs `rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]})`.
 `depends_on` health conditions gate the backend services on Mongo, Redis and Kafka readiness.
+
+Local Compose intentionally runs MongoDB **without auth**: enabling authorization together with a
+replica set requires a shared `keyFile`, which adds secret handling to local development. Hosted
+Atlas clusters keep authentication enabled, with credentials supplied only through `MONGODB_URI_*`
+secrets.
 
 Host ports currently published: MongoDB 27017, Redis 6379, Kafka 9092 and the Order Service
 foundation 3001. Web 5173 and gateway 3000 are future phases; the other domain service ports remain

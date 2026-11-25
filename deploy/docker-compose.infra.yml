@@ -3,9 +3,7 @@ services:
     image: mongo:7
     restart: unless-stopped
     command: ['--replSet', 'rs0', '--bind_ip_all']
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-orderflow}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-change-me}
+    # Local development MongoDB intentionally runs without auth. Atlas uses credentials in MONGODB_URI_*.
     ports:
       - '${MONGODB_PORT:-27017}:27017'
     volumes:
@@ -16,11 +14,7 @@ services:
       test:
         - CMD-SHELL
         - >-
-          mongosh --quiet
-          -u "$${MONGO_INITDB_ROOT_USERNAME}"
-          -p "$${MONGO_INITDB_ROOT_PASSWORD}"
-          --authenticationDatabase admin
-          --eval "db.adminCommand('ping')" || exit 1
+          mongosh --quiet --eval "db.adminCommand('ping')" || exit 1
       interval: 5s
       timeout: 5s
       retries: 20
@@ -31,14 +25,11 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-orderflow}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-change-me}
     entrypoint:
       - /bin/sh
       - -c
       - |
-        mongosh "mongodb://$${MONGO_INITDB_ROOT_USERNAME}:$${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/admin?authSource=admin&directConnection=true" --quiet --eval "
+        mongosh "mongodb://mongo:27017/admin?directConnection=true" --quiet --eval "
           try { rs.status() } catch (e) {
             rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] })
           }

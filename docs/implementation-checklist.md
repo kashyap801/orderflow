@@ -34,7 +34,7 @@ Update this file as work progresses. Each phase ends with a verification step.
 - [x] Local Docker Compose for MongoDB replica set `rs0`, Redis, Kafka and the backend container
 - [x] README, API docs and deployment guide updated for the implemented foundation
 - [x] Verify: build, typecheck, lint, format, 6 Jest tests and local HTTP smoke test
-- [ ] Verify: `/health/ready` with real MongoDB after Docker is installed on the host
+- [x] Verify: `/health/ready` with real MongoDB, Redis and Kafka through Docker Compose
 - [ ] Auth in Order Service: register/login, bcryptjs, JWT, RBAC guard (Phase 3)
 
 ## Phase 3 — Core microservices
@@ -83,11 +83,13 @@ Update this file as work progresses. Each phase ends with a verification step.
 | Date | Phase | Command / check | Result |
 | --- | --- | --- | --- |
 | 2026-11-24 | 1 | 12 JSON configs parsed with PowerShell `ConvertFrom-Json`; all 9 workspace packages present | PASS |
-| 2026-11-24 | 1 | `npm install` / `npm run format:check` | NOT RUN — Node.js is not installed in this environment; run on the developer machine before Phase 2 |
+| 2026-11-24 | 1 | `npm install` / `npm run format:check` | PASS — completed after Node.js installation |
 | 2026-11-24 | 1 (revision) | Full-workspace scan for old database/ORM names and SQL-only wording | PASS — 0 references |
 | 2026-11-24 | 1 (revision) | 12 JSON configs re-parsed after edits | PASS — 0 failures |
 | 2026-11-25 | 2 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS |
 | 2026-11-25 | 2 | `npm run test:order` | PASS — 2 suites, 6 tests |
-| 2026-11-25 | 2 | Local HTTP smoke: `/health`, `/docs`, `/docs-json` | PASS — 200; `/health/ready` returned expected 503 without MongoDB |
+| 2026-11-25 | 2 | Local HTTP smoke without infrastructure | PASS — `/health`, `/docs`, `/docs-json` 200; `/health/ready` 503 as expected |
 | 2026-11-25 | 2 | Docker Compose YAML syntax | PASS — parsed with `js-yaml` |
-| 2026-11-25 | 2 | `docker compose up` with real services | NOT RUN — Docker is not installed in this environment |
+| 2026-11-25 | 2 | `docker compose up --build` with real services | PASS — MongoDB `rs0`, Redis, Kafka and Order Service healthy |
+| 2026-11-25 | 2 | `/health/ready` with live dependencies | PASS — 200; MongoDB, Redis and Kafka all `up` |
+| 2026-11-25 | 2 | `docker compose down` / `dev:down` | PASS — stack stopped cleanly |
