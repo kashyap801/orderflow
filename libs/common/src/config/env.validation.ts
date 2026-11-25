@@ -37,6 +37,36 @@ export class EnvironmentVariables {
   @Max(65535)
   PORT = 3001;
 
+  @Transform(integer(3000))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PORT_API_GATEWAY = 3000;
+
+  @Transform(integer(3001))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PORT_ORDER_SERVICE = 3001;
+
+  @Transform(integer(3002))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PORT_INVENTORY_SERVICE = 3002;
+
+  @Transform(integer(3003))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PORT_PAYMENT_SERVICE = 3003;
+
+  @Transform(integer(3004))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PORT_NOTIFICATION_SERVICE = 3004;
+
   @IsString()
   @MinLength(1)
   CORS_ORIGINS = 'http://localhost:5173';
@@ -44,6 +74,41 @@ export class EnvironmentVariables {
   @IsString()
   @MinLength(1)
   MONGODB_URI_ORDER!: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  MONGODB_URI_INVENTORY?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  MONGODB_URI_PAYMENT?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  MONGODB_URI_NOTIFICATION?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  ORDER_SERVICE_URL = 'http://localhost:3001';
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  INVENTORY_SERVICE_URL = 'http://localhost:3002';
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  PAYMENT_SERVICE_URL = 'http://localhost:3003';
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  NOTIFICATION_SERVICE_URL = 'http://localhost:3004';
 
   @Transform(integer(5000))
   @IsInt()
