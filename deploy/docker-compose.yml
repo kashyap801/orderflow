@@ -97,7 +97,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       JWT_SECRET: ${JWT_SECRET:-orderflow-dev-secret-change-me}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
-      MONGODB_URI_ORDER: mongodb://mongo:27017/orderflow_order?replicaSet=rs0
+      MONGODB_URI_ORDER: '${MONGODB_URI_ORDER:-mongodb://mongo:27017/orderflow_order?replicaSet=rs0}'
       MONGODB_AUTO_INDEX: 'true'
       INVENTORY_SERVICE_URL: http://inventory-service:3002
       REDIS_ENABLED: 'false'
@@ -134,7 +134,7 @@ services:
       LOG_LEVEL: debug
       PORT_INVENTORY_SERVICE: 3002
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
-      MONGODB_URI_INVENTORY: mongodb://mongo:27017/orderflow_inventory?replicaSet=rs0
+      MONGODB_URI_INVENTORY: '${MONGODB_URI_INVENTORY:-mongodb://mongo:27017/orderflow_inventory?replicaSet=rs0}'
       MONGODB_AUTO_INDEX: 'true'
       REDIS_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
@@ -170,7 +170,7 @@ services:
       LOG_LEVEL: debug
       PORT_PAYMENT_SERVICE: 3003
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
-      MONGODB_URI_PAYMENT: mongodb://mongo:27017/orderflow_payment?replicaSet=rs0
+      MONGODB_URI_PAYMENT: '${MONGODB_URI_PAYMENT:-mongodb://mongo:27017/orderflow_payment?replicaSet=rs0}'
       MONGODB_AUTO_INDEX: 'true'
       REDIS_ENABLED: 'false'
       KAFKA_ENABLED: 'false'
@@ -202,7 +202,7 @@ services:
       LOG_LEVEL: debug
       PORT_NOTIFICATION_SERVICE: 3004
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
-      MONGODB_URI_NOTIFICATION: mongodb://mongo:27017/orderflow_notification?replicaSet=rs0
+      MONGODB_URI_NOTIFICATION: '${MONGODB_URI_NOTIFICATION:-mongodb://mongo:27017/orderflow_notification?replicaSet=rs0}'
       MONGODB_AUTO_INDEX: 'true'
       REDIS_ENABLED: 'false'
       KAFKA_ENABLED: 'true'
