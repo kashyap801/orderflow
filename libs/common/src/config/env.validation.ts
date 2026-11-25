@@ -74,6 +74,22 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   @MinLength(1)
+  JWT_SECRET = 'orderflow-dev-secret-change-me';
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  JWT_EXPIRES_IN = '1h';
+
+  @Transform(integer(10))
+  @IsInt()
+  @Min(4)
+  @Max(15)
+  BCRYPT_ROUNDS = 10;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
   MONGODB_URI_ORDER?: string;
 
   @IsOptional()

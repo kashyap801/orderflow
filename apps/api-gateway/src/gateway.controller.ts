@@ -17,9 +17,7 @@ export class GatewayController {
   }
 
   @Get('auth-context')
-  @ApiOperation({
-    summary: 'Authentication integration point (no token verification in Phase 3)',
-  })
+  @ApiOperation({ summary: 'Show the JWT claims resolved by the gateway middleware' })
   @ApiOkResponse({ description: 'Resolved authentication context' })
   auth(@Req() request: Request): AuthContext {
     return this.authContext.resolve(request);

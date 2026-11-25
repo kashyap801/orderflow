@@ -5,7 +5,8 @@ import { AppModule } from './app.module';
 bootstrapService({
   module: AppModule,
   name: 'API Gateway',
-  description: 'Centralized REST routing, validation, correlation IDs and auth integration points.',
+  description:
+    'Centralized REST routing, JWT verification, basic roles, correlation IDs and validation.',
   portEnvKey: 'PORT_API_GATEWAY',
 }).catch((error: unknown) => {
   console.error('Failed to start API Gateway', error);

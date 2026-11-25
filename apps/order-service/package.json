@@ -2,7 +2,7 @@
   "name": "@orderflow/order-service",
   "version": "0.1.0",
   "private": true,
-  "description": "Order domain: identity, orders, saga orchestration, order state machine, outbox",
+  "description": "Order domain: simple JWT identity, orders, status history and ORDER_CREATED events",
   "dependencies": {
     "@nestjs/common": "^10.4.22",
     "@nestjs/config": "^3.3.0",

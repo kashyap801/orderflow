@@ -100,6 +100,6 @@ describe('Gateway API', () => {
       .set('authorization', 'Bearer token')
       .set('x-user-id', 'customer-1')
       .expect(200);
-    expect(context.body.data).toEqual({ userId: 'customer-1', hasBearerToken: true });
+    expect(context.body.data).toEqual({ userId: 'customer-1', authenticated: true });
   });
 });

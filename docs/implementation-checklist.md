@@ -60,8 +60,8 @@ Update this file as work progresses. Each phase ends with a verification step.
 This is the approved short scope. Older Phase 4–7 sections below remain as reference only.
 
 - [x] Add short current-state guide and mark advanced docs as reference
-- [ ] Simple JWT register/login in Order Service and verification in the gateway
-- [ ] Basic `USER` / `ADMIN` roles; `ADMIN` required for product changes
+- [x] Simple JWT register/login in Order Service and verification in the gateway
+- [x] Basic `USER` / `ADMIN` roles; `ADMIN` required for product changes
 - [x] Minimal `ORDER_CREATED` event in `libs/contracts`
 - [x] Kafka producer in Order Service and notification consumer in Notification Service
 - [x] Redis product-read cache in Inventory Service with write invalidation
@@ -129,3 +129,6 @@ This is the approved short scope. Older Phase 4–7 sections below remain as ref
 | 2026-11-25 | Simplified 2 | `npm run test:notification` | PASS — 5 suites, 16 tests (includes consumer and event dedupe) |
 | 2026-11-25 | Simplified 3 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS |
 | 2026-11-25 | Simplified 3 | `npm run test:inventory` | PASS — 4 suites, 16 tests (includes cache hit and invalidation) |
+| 2026-11-25 | Simplified 4 | `npm run build`, `typecheck`, `lint`, `format:check` | PASS |
+| 2026-11-25 | Simplified 4 | `npm run test:order` | PASS — 7 suites, 33 tests (includes auth service) |
+| 2026-11-25 | Simplified 4 | `npm run test:gateway` | PASS — 3 suites, 13 tests (includes JWT middleware) |

@@ -95,6 +95,8 @@ services:
       LOG_LEVEL: debug
       PORT_ORDER_SERVICE: 3001
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET:-orderflow-dev-secret-change-me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
       MONGODB_URI_ORDER: mongodb://mongo:27017/orderflow_order?replicaSet=rs0
       MONGODB_AUTO_INDEX: 'true'
       INVENTORY_SERVICE_URL: http://inventory-service:3002
@@ -237,6 +239,7 @@ services:
       LOG_LEVEL: debug
       PORT_API_GATEWAY: 3000
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET:-orderflow-dev-secret-change-me}
       ORDER_SERVICE_URL: http://order-service:3001
       INVENTORY_SERVICE_URL: http://inventory-service:3002
       PAYMENT_SERVICE_URL: http://payment-service:3003

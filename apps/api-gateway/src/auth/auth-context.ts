@@ -3,23 +3,21 @@ import type { Request } from 'express';
 
 export interface AuthContext {
   userId?: string;
-  hasBearerToken: boolean;
+  role?: string;
+  authenticated: boolean;
 }
 
-/**
- * Authentication integration point only. Phase 3 forwards credentials to
- * downstream services but does not verify JWTs or enforce RBAC.
- */
+/** Resolves the JWT claims that JwtAuthMiddleware placed on the request. */
 @Injectable()
 export class AuthContextService {
   resolve(request: Request): AuthContext {
     const userId = request.header('x-user-id')?.trim();
-    const authorization = request.header('authorization');
-    const hasBearerToken =
-      authorization !== undefined && /^Bearer\s+\S+/i.test(authorization.trim());
+    const role = request.header('x-user-role')?.trim();
+
     return {
       ...(userId !== undefined && userId.length > 0 ? { userId } : {}),
-      hasBearerToken,
+      ...(role !== undefined && role.length > 0 ? { role } : {}),
+      authenticated: userId !== undefined && userId.length > 0,
     };
   }
 }

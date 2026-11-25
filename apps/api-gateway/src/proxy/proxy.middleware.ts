@@ -119,8 +119,10 @@ export class ProxyMiddleware implements NestMiddleware {
     };
     const authorization = request.header('authorization');
     const userId = request.header('x-user-id');
+    const role = request.header('x-user-role');
     if (authorization !== undefined) headers.authorization = authorization;
     if (userId !== undefined) headers['x-user-id'] = userId;
+    if (role !== undefined) headers['x-user-role'] = role;
     return headers;
   }
 }

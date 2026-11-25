@@ -18,7 +18,7 @@ deployed on Vercel.
 
 | Part | Responsibility | Data |
 | --- | --- | --- |
-| API Gateway | Routes `/api/v1/*`, forwards correlation IDs, normalizes upstream failures | None |
+| API Gateway | Verifies JWT, enforces basic roles, routes `/api/v1/*`, forwards correlation IDs | None |
 | Order Service | Creates/lists/cancels orders, resolves prices from Inventory, stores status history | `orderflow_order` |
 | Inventory Service | Products, availability, atomic reserve/release/restock | `orderflow_inventory` |
 | Payment Service | Simulated capture/refund, idempotency key, payment history | `orderflow_payment` |
@@ -29,8 +29,8 @@ deployed on Vercel.
 
 These are deliberately small and are added incrementally on top of the working Phase 3 backend:
 
-1. **JWT auth** — register/login in Order Service, token verification in the gateway.
-2. **Basic roles** — `USER` for normal actions, `ADMIN` for product create/update/deactivate.
+1. **JWT auth (implemented)** — register/login in Order Service, token verification in the gateway.
+2. **Basic roles (implemented)** — `USER` for normal actions, `ADMIN` for product changes.
 3. **Kafka (implemented)** — Order publishes `ORDER_CREATED`; Notification consumes it and writes a
    notification.
 4. **Redis (implemented)** — Inventory caches product reads with a short TTL and invalidates on
