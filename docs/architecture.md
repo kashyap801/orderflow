@@ -1,7 +1,11 @@
 # Architecture
 
-**Status:** Phase 3 core REST services are implemented and verified. Kafka choreography, saga
-orchestration, outbox relay, JWT/RBAC enforcement and Redis rate limiting are Phase 4+ targets.
+> **Start with [simple-architecture.md](simple-architecture.md)** for the current, short version.
+> This document keeps the fuller boundary and data-ownership detail.
+
+**Status:** Phase 3 core REST services are implemented and verified. The simplified additions are
+JWT auth, one Kafka notification event, Redis product caching and a React frontend. Saga
+orchestration, outbox relay, DLQ and rate limiting remain out of scope.
 
 ## 1. Context and goals
 

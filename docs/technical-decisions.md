@@ -2,6 +2,10 @@
 
 Each decision: context → decision → trade-off. Revise here when implementation changes.
 
+> **Simplified scope:** ADR-005, ADR-006, ADR-012, ADR-016 and ADR-017 describe deferred advanced
+> patterns and are kept as interview reference only. The current simple choices are summarised in
+> [simple-architecture.md](simple-architecture.md).
+
 ### ADR-001 — npm workspaces monorepo
 **Context:** multiple services and shared types. **Decision:** plain npm workspaces
 (`apps/*`, `libs/*`) with a single lockfile and `tsconfig.base.json` path aliases.

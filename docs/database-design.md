@@ -1,6 +1,10 @@
-# Database design
+# Database design (reference)
 
-**Status:** proposed. Mongoose schemas and index definitions are Phase 2+ work.
+> **Simplified scope:** the active collections are `orders`, `products`, `payments` and
+> `notifications`. `outbox`, `processed_events`, `idempotency_keys`, saga state and reservation
+> collections below are **not implemented**. See [simple-architecture.md](simple-architecture.md).
+
+**Status:** implemented core schemas plus deferred reference sections.
 
 ## 1. Ownership rules
 

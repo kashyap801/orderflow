@@ -1,6 +1,10 @@
-# Event-driven architecture
+# Event-driven architecture (reference only)
 
-**Status:** proposed contract. Types land in `libs/contracts` in Phase 2; Kafka wiring in Phase 4.
+> **Simplified scope:** only `ORDER_CREATED` is implemented as a simple producer/consumer demo.
+> The larger topic catalogue, retry topics, DLQ, outbox and saga tracing below are **not
+> implemented**. See [simple-architecture.md](simple-architecture.md) for the current behavior.
+
+**Status:** reference design from earlier planning; simplified subset is implemented in `libs/contracts`.
 
 ## 1. Delivery semantics
 

@@ -51,11 +51,25 @@ Update this file as work progresses. Each phase ends with a verification step.
 - [x] Unit, integration and API tests for all five deployables (insufficient stock, duplicate payments, inventory concurrency, order cancellation)
 - [x] Shared `deploy/Dockerfile` with `SERVICE` build arg; Compose wires all four services + gateway
 - [x] README, architecture, API and deployment docs updated for Phase 3
-- [ ] Kafka consumers, saga orchestration, outbox relay, distributed order workflow (Phase 4)
-- [ ] JWT/RBAC enforcement and Redis rate limiting (deferred)
-- [ ] Frontend (Phase 6)
+- [ ] Kafka consumers, saga orchestration, outbox relay, distributed order workflow (deferred)
+- [ ] JWT/RBAC enforcement and Redis rate limiting (only simple auth/cache in this track)
+- [ ] Frontend (simple React app in this track)
 
-## Phase 4 — Distributed systems
+## Simplified remaining scope — current track
+
+This is the approved short scope. Older Phase 4–7 sections below remain as reference only.
+
+- [ ] Add short current-state guide and mark advanced docs as reference
+- [ ] Simple JWT register/login in Order Service and verification in the gateway
+- [ ] Basic `USER` / `ADMIN` roles; `ADMIN` required for product changes
+- [ ] Minimal `ORDER_CREATED` event in `libs/contracts`
+- [ ] Kafka producer in Order Service and notification consumer in Notification Service
+- [ ] Redis product-read cache in Inventory Service with write invalidation
+- [ ] Simple React frontend: login, catalogue, cart, checkout, orders, admin product form
+- [ ] GitHub Actions checks and Vercel config for the frontend
+- [ ] Verify: existing 79 tests plus new essential tests, Compose smoke, frontend build
+
+## Phase 4 — Distributed systems (reference only)
 
 - [ ] `@orderflow/contracts`: envelopes and payload types for all topics
 - [ ] Outbox collection + lease-based relay in each publishing service
@@ -64,7 +78,7 @@ Update this file as work progresses. Each phase ends with a verification step.
 - [ ] Duplicate-order, duplicate-event and concurrent-reservation handling through events
 - [ ] Verify: full E2E happy path + all failure scenarios from `order-lifecycle.md`
 
-## Phase 5 — Redis and optimisation
+## Phase 5 — Redis and optimisation (reference only)
 
 - [ ] Catalogue caching with TTL and invalidation
 - [ ] Redis rate limiting
@@ -72,14 +86,14 @@ Update this file as work progresses. Each phase ends with a verification step.
 - [ ] Query/index review; optional reservation lock benchmark
 - [ ] Verify: load/concurrency tests show no oversell and expected cache hits
 
-## Phase 6 — Frontend
+## Phase 6 — Frontend (reference only)
 
 - [ ] Vite + Tailwind + Router + TanStack Query setup
 - [ ] Ten required pages, loading/error/empty states, auth flow
 - [ ] Gateway-only API client with typed contracts
 - [ ] Verify: production build + browser walkthrough of the order workflow
 
-## Phase 7 — Testing, deployment and documentation
+## Phase 7 — Testing, deployment and documentation (partially reference)
 
 - [x] Unit/integration/API suites for Phase 3 services (concurrency/duplicate tests included)
 - [x] Dockerfiles for the five backend apps (one shared parameterized image) + Compose healthchecks

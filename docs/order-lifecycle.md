@@ -1,6 +1,10 @@
-# Order lifecycle and saga
+# Order lifecycle and saga (reference only)
 
-**Status:** proposed state machine; implemented in Phase 4.
+> **Simplified scope:** the implemented lifecycle is the Phase 3 REST status flow
+> (`PENDING` → `CONFIRMED` / `CANCELLED`) with status history. The saga state machine and outbox
+> events below are **not implemented**. See [simple-architecture.md](simple-architecture.md).
+
+**Status:** reference design only for the deferred distributed workflow.
 
 ## 1. State machine
 

@@ -2,18 +2,19 @@
 
 **Status:** Phase 3 local deployment is implemented and verified. One parameterized backend image
 builds the gateway and all four domain services; Docker Compose runs MongoDB, Redis, Kafka and the
-five NestJS deployables.
+five NestJS deployables. The simplified track adds a Vercel build for `apps/web`; hosted backend
+details below remain reference material.
 
 ## 1. Hosting model
 
 | Concern | Local development | Hosted |
 | --- | --- | --- |
 | Source | Working copy | **GitHub** monorepo, branch protection on `main`, required CI checks |
-| Web | Not implemented (Vite dev server planned on 5173) | **Vercel** (static build from `apps/web`, future phase) |
-| Backend | Docker Compose, ports 3000–3004 | **Render** Docker Web Services, one per deployable, always-on instances |
-| Database | MongoDB 7 single-node replica set `rs0` | **MongoDB Atlas M10+** (four databases in one cluster) |
-| Cache / limits | Redis 7 container (infra only in Phase 3) | **Upstash Redis** (Phase 5) |
-| Messaging | Kafka 3.x KRaft container (infra only in Phase 3) | **Confluent Cloud** (Phase 4) |
+| Web | Vite dev server on `5173` (simple app in this track) | **Vercel** static build from `apps/web` |
+| Backend | Docker Compose, ports 3000–3004 | Render notes are reference only; not required for this track |
+| Database | MongoDB 7 single-node replica set `rs0` | MongoDB Atlas notes are reference only |
+| Cache / limits | Redis 7 container for product reads only | Managed Redis notes are reference only |
+| Messaging | Kafka 3.x KRaft container for `ORDER_CREATED` only | Managed Kafka notes are reference only |
 | Secrets | `.env` (gitignored) | Vercel/Render/GitHub Actions secret stores |
 
 ```mermaid
